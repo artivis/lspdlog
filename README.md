@@ -36,8 +36,7 @@ I have only over-engineered a tiny `cmake/cpp` layer on top of it.
 
     add_executable(my_project my_project.cpp)
     add_dependencies(my_project spdlog)
-    target_link_libraries(my_project
-        ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(my_project ${CMAKE_THREAD_LIBS_INIT})
     ```
 
 3.  Compile your project.
@@ -72,8 +71,7 @@ include_directories(${LSPDLOG_INCLUDE_DIRS}) #<-- necessary
 
 add_executable(my_project my_project.cpp)
 add_dependencies(my_project spdlog) #<-- necessary, waits for downloading spdlog
-target_link_libraries(my_project
-    ${CMAKE_THREAD_LIBS_INIT})     #<-- necessary
+target_link_libraries(my_project ${CMAKE_THREAD_LIBS_INIT})  #<-- necessary
 ```
 
 and you main `my_project.cpp`:
