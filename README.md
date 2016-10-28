@@ -31,10 +31,10 @@ I have only over-engineered a tiny `cmake/cpp` layer on top of it.
     ```cmake
     find_package(Threads REQUIRED)
 
-    add_directory(lspdlog)
+    add_subdirectory(lspdlog)
     include_directories(${LSPDLOG_INCLUDE_DIRS})
 
-    ADD_EXECUTABLE(my_project my_project.cpp)
+    add_executable(my_project my_project.cpp)
     add_dependencies(my_project spdlog)
     target_link_libraries(my_project
         ${CMAKE_THREAD_LIBS_INIT})
@@ -67,10 +67,10 @@ find_package(Threads REQUIRED)                         #<-- necessary
 
 SET(CMAKE_BUILD_TYPE "DEBUG")
 
-add_directory(lspdlog)                       #<-- necessary
+add_subdirectory(lspdlog)                    #<-- necessary
 include_directories(${LSPDLOG_INCLUDE_DIRS}) #<-- necessary
 
-ADD_EXECUTABLE(my_project my_project.cpp)
+add_executable(my_project my_project.cpp)
 add_dependencies(my_project spdlog) #<-- necessary, waits for downloading spdlog
 target_link_libraries(my_project
     ${CMAKE_THREAD_LIBS_INIT})     #<-- necessary
