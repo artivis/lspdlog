@@ -3,7 +3,7 @@
 ## A simple wrapper package to enable cool logging for your project.
 
 This package is nothing but a tiny hacky wrapper around [spdlog](https://github.com/gabime/spdlog) logging library.  
-It has no other aim than enabling a bunch of macro to ease logging for your project.
+It has no other aim than enabling a bunch of macros to ease logging for your project.
 
 For a more customizable logging please refer directly to [spdlog wiki](https://github.com/gabime/spdlog/wiki/1.-QuickStart).
 
@@ -23,8 +23,7 @@ I have only over-engineered a tiny `cmake/cpp` layer on top of it.
 
     ```terminal
     $ cd ~/your_project/root_directory/
-    $ git clone xxx
-
+    $ git clone https://github.com/artivis/lspdlog.git
     ```
 
 2.  In your project `CMakeLists.txt`:
@@ -40,7 +39,7 @@ I have only over-engineered a tiny `cmake/cpp` layer on top of it.
 
 ## Now what ?
 
-This package define automatically the following macro:
+This package defines automatically the following macros:
 
 ```cpp
 YOUR_PROJECT_NAME_INFO(...);
