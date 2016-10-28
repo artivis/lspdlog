@@ -29,8 +29,15 @@ I have only over-engineered a tiny `cmake/cpp` layer on top of it.
 2.  In your project `CMakeLists.txt`:
 
     ```cmake
-    add_directory(o2spdlog)
+    find_package(Threads REQUIRED)
+
+    add_directory(lspdlog)
     include_directories(${LSPDLOG_INCLUDE_DIRS})
+
+    ADD_EXECUTABLE(my_project my_project.cpp)
+    add_dependencies(my_project spdlog)
+    target_link_libraries(my_project
+        ${CMAKE_THREAD_LIBS_INIT})
     ```
 
 3.  Compile your project.
@@ -64,8 +71,8 @@ add_directory(lspdlog)                       #<-- necessary
 include_directories(${LSPDLOG_INCLUDE_DIRS}) #<-- necessary
 
 ADD_EXECUTABLE(my_project my_project.cpp)
-add_dependencies(testcmake spdlog) #<-- necessary, waits for downloading spdlog
-target_link_libraries(testcmake
+add_dependencies(my_project spdlog) #<-- necessary, waits for downloading spdlog
+target_link_libraries(my_project
     ${CMAKE_THREAD_LIBS_INIT})     #<-- necessary
 ```
 
