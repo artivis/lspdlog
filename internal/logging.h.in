@@ -122,8 +122,6 @@ Logger::Logger()
 {
   console_ = spdlog::stdout_color_mt("@PROJECT_NAME@_main_console");
 
-  console_->flush_on(spdlog::level::err);
-
   spdlog::set_pattern("[%l] %v");
 
   enable_debug(${__AM_I_COMPILED_IN_DEBUG__});
