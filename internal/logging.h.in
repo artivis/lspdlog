@@ -129,7 +129,7 @@ Logger::Logger()
 
 Logger::~Logger()
 {
-  spdlog::drop_all();
+  spdlog::drop("@PROJECT_NAME@_main_console");
 }
 
 template<typename... Args>
