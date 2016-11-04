@@ -1,4 +1,6 @@
 # lspdlog - Lazy spdlog
+=======
+[![Project Stats](https://www.openhub.net/p/lspdlog/widgets/project_thin_badge.gif)](https://www.openhub.net/p/lspdlog)
 
 ## A simple wrapper package to enable cool logging for your project.
 
