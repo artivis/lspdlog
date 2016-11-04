@@ -43,6 +43,14 @@ I have only over-engineered a tiny `cmake/cpp` layer on top of it.
 
 4.  Nop that's it.
 
+#### Enabling logging in file (Optional):
+
+In order to enable a specific macro that logs in a file (see below) you can edit `lspdolg/CMakeLists.txt` at line 3:
+
+```cmake
+option(ENABLE_DATA_LOGGING "Enable data logging." OFF) # set it to ON for data logging.
+```
+
 ## Now what ?
 
 This package defines automatically the following macros:
@@ -53,6 +61,14 @@ YOUR_PROJECT_NAME_WARN(...);
 YOUR_PROJECT_NAME_DEBUG(...);
 YOUR_PROJECT_NAME_ERROR(...);
 ```
+
+#### Optionally:
+
+```cpp
+YOUR_PROJECT_NAME_LOG(...);
+```
+
+### An example:
 
 Given your project `CMakeLists.txt`:
 
@@ -74,7 +90,7 @@ add_dependencies(my_project spdlog) #<-- necessary, waits for downloading spdlog
 target_link_libraries(my_project ${CMAKE_THREAD_LIBS_INIT})  #<-- necessary
 ```
 
-and you main `my_project.cpp`:
+and your main file `my_project.cpp`:
 
 ```cpp
 #include "lspdlog/logging.h"
@@ -127,6 +143,41 @@ MY_AWESOME_PROJECT_DEBUG("will get printed.");
 MY_AWESOME_PROJECT_DISABLE_DEBUG_LOG();
 MY_AWESOME_PROJECT_DEBUG("will NOT get printed.");
 ```
+
+#### Data logging (optional):
+
+Given that you have set `ON` the data logging option (see section `Install (optional)`), the following macro is enabled:
+
+```cpp
+MY_AWESOME_PROJECT_LOG("Some data ", 2, " save.");
+```
+
+This functionality creates a `.my_awesome_project` folder in the user `HOME` directory such as:
+
+```terminal
+~/.my_awesome_project$
+```
+
+where it will save all data passed to the `MY_AWESOME_PROJECT_LOG(...)` macro.  
+In order to keep things a little ordered, each time you run your program, the macro also creates a sub-directory named after the current date (MM_DD_YY - month-day-year) within which it saves the log file named after the current time (HH_MM_SS - hour-minutes-seconds):
+
+```terminal
+$ cat ~/.my_awesome_project/11_04_16/11_25_47.log
+[11:25:47.351422712] Some data 2 log.
+```
+
+Again as for the `MY_AWESOME_PROJECT_DEBUG()` macro, this functionality can be enabled/disabled with the following macro:
+
+```cpp
+MY_AWESOME_PROJECT_ENABLE_DATA_LOG();
+MY_AWESOME_PROJECT_LOG("will get logged.");
+
+MY_AWESOME_PROJECT_DISABLE_DATA_LOG();
+MY_AWESOME_PROJECT_LOG("will NOT get logged.");
+```
+
+Notice that the `~/.my_awesome_project` directory and sub-directories are created (if they don't already exists) only if the logging is enabled, either through `CMake` or manually.
+
 
 # Todo
 
