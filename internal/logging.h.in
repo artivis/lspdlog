@@ -10,6 +10,9 @@
 
 #include "spdlog/spdlog.h"
 
+// for getpwuid
+#include <pwd.h>
+
 namespace lspdlog
 {
 namespace details
@@ -184,6 +187,271 @@ inline bool Logger::enable_debug()
 
 #define @PROJECT_NAME_CAPS@_DISABLE_DEBUG_LOG() \
   lspdlog::details::Logger::get().enable_debug(false);
+
+namespace
+{
+  namespace spdlogd   = spdlog::details;
+  namespace spdlogdos = spdlogd::os;
+}
+
+/**
+ * @brief getUserHome.
+ * @param home. The user home.
+ * @return true is found it, false otherwise.
+ */
+inline bool getUserHome(std::string& home)
+{
+  home.clear();
+  struct passwd* pwd = getpwuid(getuid());
+
+  if (pwd)
+    home = pwd->pw_dir;
+  else
+    home = getenv("HOME");
+
+  return (home.empty())? false : true;
+}
+
+/**
+ * @brief directoryExists.
+ * @param dir. Absolute path to 'dir'.
+ * @return true if exists, false otherwise.
+ */
+inline bool directoryExists(const std::string& dir)
+{
+  struct stat sb;
+  return stat(dir.c_str(), &sb) == 0;
+}
+
+/**
+ * @brief createDirectory.
+ * @param dir. Absolute path to 'dir'.
+ * @return true if created, false otherwise.
+ */
+inline bool createDirectory(const std::string& dir)
+{
+  return mkdir(dir.c_str(), S_IRUSR | S_IWUSR | S_IXUSR) == 0;
+}
+
+/**
+ * @brief getDateStr.
+ *
+ * Return current date formated as
+ * MM_DD_YY (month, day, year).
+ *
+ * @return std::string. Formated date.
+ */
+inline std::string getDateStr()
+{
+  fmt::MemoryWriter w;
+  auto tm_time = spdlogdos::localtime(spdlog::log_clock::to_time_t(spdlogdos::now()));
+
+  return spdlogd::pad_n_join(w, tm_time.tm_mon + 1, tm_time.tm_mday, tm_time.tm_year % 100, '_').str();
+}
+
+/**
+ * @brief getTimeStr.
+ *
+ * Return current time formated as
+ * HH_MM_SS (hour, min, second).
+ *
+ * @return std::string. Formated time.
+ */
+inline std::string getTimeStr()
+{
+  fmt::MemoryWriter w;
+  auto tm_time = spdlogdos::localtime(spdlog::log_clock::to_time_t(spdlogdos::now()));
+
+  return spdlogd::pad_n_join(w, tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec, '_').str();
+}
+
+/**
+ * @brief fileExists.
+ * @param file. Absolute path to 'file'.
+ * @return true if exists, false otherwise.
+ */
+inline bool fileExists(const std::string& file)
+{
+  return spdlogdos::file_exists(file);
+}
+
+/**
+ * @brief deleteFile.
+ * @param file. Absolute path to 'file'.
+ * @return true if deleted, false otherwise.
+ */
+inline bool deleteFile(const std::string& file)
+{
+  return (bool)spdlogdos::remove(file);
+}
+
+class DataLogger : public Singleton<DataLogger>
+{
+  friend class Singleton<DataLogger>;
+
+protected:
+
+  DataLogger();
+  ~DataLogger();
+
+public:
+
+  DataLogger(DataLogger&)     = delete;
+  void operator=(DataLogger&) = delete;
+
+  template<typename... Args>
+  void log(const Args&... args);
+
+  void enableLog(const bool enabled);
+
+protected:
+
+  bool init_ = false;
+
+  bool log_ = true;
+
+  const std::string log_name_;
+
+  std::string log_ext_ = ".log";
+
+  std::string log_dir_;
+
+  std::string log_time_;
+
+  std::string log_sess_dir_;
+
+  std::string log_full_;
+
+  std::string user_home_;
+
+  std::shared_ptr<spdlog::logger> logger_;
+
+  bool init();
+
+  std::string repeatString(const std::string &str, std::size_t n);
+};
+
+DataLogger::DataLogger() :
+  log_name_("@PROJECT_NAME@_main_logger"),
+  log_dir_(".@PROJECT_NAME@")
+{
+
+  enableLog(${_ENABLE_DATA_LOGGING_});
+
+  log_sess_dir_ = getDateStr();
+  log_time_ = getTimeStr();
+}
+
+DataLogger::~DataLogger()
+{
+  spdlog::drop(log_name_);
+}
+
+inline bool DataLogger::init()
+{
+  if (!getUserHome(user_home_))
+  {
+    log_ = false;
+    return false;
+  }
+  else
+  {
+    log_dir_.insert(0, 1, '/');
+    log_dir_.insert(0, user_home_);
+
+    if (!directoryExists(log_dir_))
+    {
+      if (!createDirectory(log_dir_))
+      {
+        @PROJECT_NAME_CAPS@_ERROR("Could not find nor create directory ", log_dir_,
+                                  ". Data will not be logged !");
+
+        log_ = false;
+        return false;
+      }
+    }
+  }
+
+  //log_sess_dir_ = getDateStr();
+
+  log_sess_dir_.insert(0, 1, '/');
+  log_sess_dir_.insert(0, log_dir_);
+
+  if (!directoryExists(log_sess_dir_))
+  {
+    if (!createDirectory(log_sess_dir_))
+    {
+      log_sess_dir_ = log_dir_;
+    }
+  }
+
+  log_full_ = log_sess_dir_ + "/" + log_time_ + log_ext_;
+
+  @PROJECT_NAME_CAPS@_DEBUG("Logger ", log_name_, " will log at : ", log_full_);
+
+  if (fileExists(log_full_))
+  {
+    deleteFile(log_full_);
+  }
+
+  logger_ = spdlog::basic_logger_mt(log_name_, log_full_);
+
+  // Enable asynchronous logging
+  // Queue size must be a power of 2
+  //spdlog::set_async_mode(4096);
+
+  // Logging pattern is :
+  // [hour:minutes:seconds.nanoseconds] #log-content
+  logger_->set_pattern("[%H:%M:%S.%F] %v");
+
+  init_ = true;
+  return init_;
+}
+
+template<typename... Args>
+inline void DataLogger::log(const Args&... args)
+{
+  if (!log_) return;
+  if (!init_) init();
+  logger_->info(repeatString("{}", sizeof...(args)).c_str(), args...);
+}
+
+inline void DataLogger::enableLog(const bool enabled)
+{
+  log_ = enabled;
+}
+
+inline std::string DataLogger::repeatString(const std::string &str, std::size_t n)
+{
+  if (n == 0) return {};
+
+  if (n == 1 || str.empty()) return str;
+
+  const auto n_char = str.size();
+
+  if (n_char == 1) return std::string(n, str[0]);
+
+  std::string res(str);
+  res.reserve(n_char * n);
+
+  std::size_t m = 2;
+  for (; m <= n; m *= 2) res += res;
+
+  n -= m*.5;
+
+  res.append(res.c_str(), n * n_char);
+
+  return res;
+}
+
+#define @PROJECT_NAME_CAPS@_LOG(...) \
+  lspdlog::details::DataLogger::get().log(__VA_ARGS__);
+
+#define @PROJECT_NAME_CAPS@_ENABLE_DATA_LOG(...) \
+  lspdlog::details::DataLogger::get().enableLog(true);
+
+#define @PROJECT_NAME_CAPS@_DISABLE_DATA_LOG(...) \
+  lspdlog::details::DataLogger::get().enableLog(false);
 
 } // namespace details
 } // namespace lspdlog

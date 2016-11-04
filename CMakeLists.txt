@@ -1,5 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 
+option(ENABLE_DATA_LOGGING "Enable data logging." OFF) # set it to ON for data logging.
+
 # Get the project name in capital letters
 # for the logging macros
 string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_CAPS)
@@ -9,6 +11,12 @@ if(CMAKE_BUILD_TYPE MATCHES DEBUG)
 else()
   set(__AM_I_COMPILED_IN_DEBUG__ false)
 endif()
+
+if(ENABLE_DATA_LOGGING)
+  set(_ENABLE_DATA_LOGGING_ true)
+else()
+  set(_ENABLE_DATA_LOGGING_ false)
+endif(ENABLE_DATA_LOGGING)
 
 # Download spdlog
 add_subdirectory(internal)
