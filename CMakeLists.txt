@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 
-option(ENABLE_DATA_LOGGING "Enable data logging." OFF) # set it to ON for data logging.
+#option(ENABLE_DATA_LOGGING "Enable data logging." OFF) # set it to ON for data logging.
 
 # Get the project name in capital letters
 # for the logging macros
@@ -12,11 +12,17 @@ else()
   set(__AM_I_COMPILED_IN_DEBUG__ false)
 endif()
 
-if(ENABLE_DATA_LOGGING)
-  set(_ENABLE_DATA_LOGGING_ true)
+if(LSPDLOG_ENABLE_TRACE_LOGGING)
+  set(_LSPDLOG_ENABLE_TRACE_LOGGING_ true)
 else()
-  set(_ENABLE_DATA_LOGGING_ false)
-endif(ENABLE_DATA_LOGGING)
+  set(_LSPDLOG_ENABLE_TRACE_LOGGING_ false)
+endif(LSPDLOG_ENABLE_TRACE_LOGGING)
+
+if(LSPDLOG_ENABLE_DATA_LOGGING)
+  set(_LSPDLOG_ENABLE_DATA_LOGGING_ true)
+else()
+  set(_LSPDLOG_ENABLE_DATA_LOGGING_ false)
+endif(LSPDLOG_ENABLE_DATA_LOGGING)
 
 # Download spdlog
 add_subdirectory(internal)

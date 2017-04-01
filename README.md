@@ -1,6 +1,5 @@
 # lspdlog - Lazy spdlog
-=======
-[![Project Stats](https://www.openhub.net/p/lspdlog/widgets/project_thin_badge.gif)](https://www.openhub.net/p/lspdlog)
+============================================
 
 ## A simple wrapper package to enable cool logging for your project.
 
@@ -28,6 +27,13 @@ I have only over-engineered a tiny `cmake/cpp` layer on top of it.
     $ git clone https://github.com/artivis/lspdlog.git
     ```
 
+    or else
+
+    ```terminal
+    $ cd ~/your_project/root_directory/
+    $ git submodule add https://github.com/artivis/lspdlog.git
+    ```
+
 2.  In your project `CMakeLists.txt`:
 
     ```cmake
@@ -47,10 +53,23 @@ I have only over-engineered a tiny `cmake/cpp` layer on top of it.
 
 #### Enabling logging in file (Optional):
 
-In order to enable a specific macro that logs in a file (see below) you can edit `lspdolg/CMakeLists.txt` at line 3:
+In order to enable a specific macro that logs in a file (see below), add to your project `CMakeLists.txt`:
 
 ```cmake
-option(ENABLE_DATA_LOGGING "Enable data logging." OFF) # set it to ON for data logging.
+# Set 'ON' to enable 'TRACE' macro.
+option(LSPDLOG_ENABLE_TRACE_LOGGING "Enable trace logging." ON)
+  
+# Set 'ON' to enable 'LOG' macro.
+option(LSPDLOG_ENABLE_DATA_LOGGING  "Enable data logging."  ON)
+  
+find_package(Threads REQUIRED)
+  
+add_subdirectory(lspdlog)
+include_directories(${LSPDLOG_INCLUDE_DIRS})
+  
+add_executable(my_project my_project.cpp)
+add_dependencies(my_project spdlog)
+target_link_libraries(my_project ${CMAKE_THREAD_LIBS_INIT})
 ```
 
 ## Now what ?
@@ -67,6 +86,7 @@ YOUR_PROJECT_NAME_ERROR(...);
 #### Optionally:
 
 ```cpp
+YOUR_PROJECT_NAME_TRACE(...);
 YOUR_PROJECT_NAME_LOG(...);
 ```
 
@@ -76,6 +96,12 @@ Given your project `CMakeLists.txt`:
 
 ```cmake
 project(my_awesome_project)
+
+# Set 'ON' to enable 'TRACE' macro.
+option(LSPDLOG_ENABLE_TRACE_LOGGING "Enable trace logging." OFF)
+  
+# Set 'ON' to enable 'LOG' macro.
+option(LSPDLOG_ENABLE_DATA_LOGGING  "Enable data logging."  OFF)
 
 find_package(Threads REQUIRED)                         #<-- necessary
 
@@ -97,9 +123,6 @@ and your main file `my_project.cpp`:
 ```cpp
 #include "lspdlog/logging.h"
 
-// Doable but not necessary
-//#include "spdlog/spdlog.h"
-
 int main()
 {
   std::cout << "Hello world." << std::endl;
@@ -107,7 +130,7 @@ int main()
   MY_AWESOME_PROJECT_INFO("Yep ", "that is");
   MY_AWESOME_PROJECT_WARN("way\t", 2);
   MY_AWESOME_PROJECT_DEBUG("(I meant 'too'");
-  MY_AWESOME_PROJECT_ERROR("!", "!", "!");
+  MY_AWESOME_PROJECT_ERROR("easy");
 
   return 0;
 }
@@ -136,16 +159,6 @@ Hello world.
 [error] easy
 ```
 
-However you can still manually enable/disable debug messages with:
-
-```cpp
-MY_AWESOME_PROJECT_ENABLE_DEBUG_LOG();
-MY_AWESOME_PROJECT_DEBUG("will get printed.");
-
-MY_AWESOME_PROJECT_DISABLE_DEBUG_LOG();
-MY_AWESOME_PROJECT_DEBUG("will NOT get printed.");
-```
-
 #### Data logging (optional):
 
 Given that you have set `ON` the data logging option (see section `Install (optional)`), the following macro is enabled:
@@ -168,7 +181,7 @@ $ cat ~/.my_awesome_project/11_04_16/11_25_47.log
 [11:25:47.351422712] Some data 2 log.
 ```
 
-Again as for the `MY_AWESOME_PROJECT_DEBUG()` macro, this functionality can be enabled/disabled with the following macro:
+This functionality can be enabled/disabled at runtime with the following macro:
 
 ```cpp
 MY_AWESOME_PROJECT_ENABLE_DATA_LOG();
@@ -184,6 +197,7 @@ Notice that the `~/.my_awesome_project` directory and sub-directories are create
 # Todo
 
 -   [ ] fix (do) install rules & `ExternalProject_Add`
--   [ ] trace & critical macro
+-   [x] trace macro
+-   [ ] critical macro
 -   [ ] async logger
 -   [ ] enable more customization

@@ -5,17 +5,15 @@
  * \author: Jeremie Deray
  */
 
-#ifndef INTERNAL_CONFIG_LOGGING_H_
-#define INTERNAL_CONFIG_LOGGING_H_
+#ifndef _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_
+#define _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_
 
 #include "spdlog/spdlog.h"
 
 // for getpwuid
 #include <pwd.h>
 
-namespace lspdlog
-{
-namespace details
+namespace
 {
 
 /**
@@ -25,19 +23,15 @@ namespace details
 template <class T>
 class Singleton
 {
-  /**
-   * \brief Custom deleter to by-pass private destructor issue.
-   **/
-  struct Deleter;
 
-  using SingletonOPtr = std::unique_ptr<T, Deleter>;
+  using SingletonOPtr = std::unique_ptr<T>;
 
-  public:
+public:
 
   template <typename... Args>
   static T& get(Args&&... args)
   {
-    static SingletonOPtr instance_(new T(args...));
+    static SingletonOPtr instance_(new T(std::forward<Args>(args)...));
     return *instance_;
   }
 
@@ -49,85 +43,89 @@ class Singleton
 
 protected:
 
-  Singleton() = default;
-
-  virtual ~Singleton() = default;
+  Singleton()  = default;
+  ~Singleton() = default;
 };
 
-template <class T>
-struct Singleton<T>::Deleter
-{
-  void operator()( const T* const p )
-  {
-    delete p;
-  }
-};
+constexpr auto repeated_brace = std::make_tuple("{}", 
+                                                "{}{}", 
+                                                "{}{}{}", 
+                                                "{}{}{}{}", 
+                                                "{}{}{}{}{}",
+                                                "{}{}{}{}{}{}", 
+                                                "{}{}{}{}{}{}{}", 
+                                                "{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}"); // up to 25 args. Should be fine
 
-class Logger : public Singleton<Logger>
+class Logger
 {
-  friend class Singleton<Logger>;
-
-protected:
+public:
 
   Logger();
   ~Logger();
-
-public:
 
   Logger(Logger&)         = delete;
   void operator=(Logger&) = delete;
 
   template<typename... Args>
-  void info(const Args&... args);
+  void info(Args&&... args);
 
   template<typename... Args>
-  void warn(const Args&... args);
+  void warn(Args&&... args);
 
   template<typename... Args>
-  void error(const Args&... args);
+  void error(Args&&... args);
 
   template<typename... Args>
-  void debug(const Args&... args);
+  void debug(Args&&... args);
 
-  void enable_debug(const bool enable);
+  template<typename... Args>
+  void trace(Args&&... args);
 
-  bool enable_debug();
+  bool set_async_queue(const std::size_t q_size);
+
+  bool debug_enabled();
+
+  bool trace_enabled();
 
 protected:
 
   std::shared_ptr<spdlog::logger> console_;
-
-  std::string repeat_string(const std::string &str, std::size_t n)
-  {
-    if (n == 0) return {};
-
-    if (n == 1 || str.empty()) return str;
-
-    const auto n_char = str.size();
-
-    if (n_char == 1) return std::string(n, str[0]);
-
-    std::string res(str);
-    res.reserve(n_char * n);
-
-    std::size_t m = 2;
-    for (; m <= n; m *= 2) res += res;
-
-    n -= m*.5;
-
-    res.append(res.c_str(), n * n_char);
-
-    return res;
-  }
 };
 
 Logger::Logger()
 {
   console_ = spdlog::stdout_color_mt("@PROJECT_NAME@_main_console");
 
-  spdlog::set_pattern("[%l] %v");
+#if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
+  console_->set_level(spdlog::level::trace);
+#endif
 
-  enable_debug(${__AM_I_COMPILED_IN_DEBUG__});
+#ifdef _ENABLE_ASYNC_LOG_
+  // Enable asynchronous logging
+  // Queue size must be a power of 2
+  spdlog::set_async_mode(4096);
+
+  spdlog::set_pattern("[%t][%H:%M:%S.%F][%l] %v");
+#else
+  spdlog::set_pattern("[%l] %v");
+#endif
 }
 
 Logger::~Logger()
@@ -136,63 +134,100 @@ Logger::~Logger()
 }
 
 template<typename... Args>
-void Logger::info(const Args&... args)
+void Logger::info(Args&&... args)
 {
-  console_->info(repeat_string("{}", sizeof...(args)).c_str(), args...);
+  console_->info(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
 }
 
 template<typename... Args>
-void Logger::warn(const Args&... args)
+void Logger::warn(Args&&... args)
 {
-  console_->warn(repeat_string("{}", sizeof...(args)).c_str(), args...);
+  console_->warn(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
 }
 
 template<typename... Args>
-void Logger::error(const Args&... args)
+void Logger::error(Args&&... args)
 {
-  console_->error(repeat_string("{}", sizeof...(args)).c_str(), args...);
+  console_->error(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
 }
 
 template<typename... Args>
-void Logger::debug(const Args&... args)
+void Logger::debug(Args&&... args)
 {
-  console_->debug(repeat_string("{}", sizeof...(args)).c_str(), args...);
+  console_->debug(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
 }
 
-inline void Logger::enable_debug(const bool enable)
+template<typename... Args>
+void Logger::trace(Args&&... args)
 {
-  (enable)? console_->set_level(spdlog::level::debug) :
-            console_->set_level(spdlog::level::info);
+  console_->trace(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
 }
 
-inline bool Logger::enable_debug()
+inline bool Logger::debug_enabled()
 {
-  return console_->level() == spdlog::level::debug;
+  return ${__AM_I_COMPILED_IN_DEBUG__};
 }
+
+inline bool Logger::trace_enabled()
+{
+  return ${_LSPDLOG_ENABLE_TRACE_LOGGING_};
+}
+
+inline bool Logger::set_async_queue(const std::size_t q_size)
+{
+  bool p2 = q_size%2 == 0;
+  if (p2) spdlog::set_async_mode(q_size);
+  return q_size;
+}
+
+} /* namespace */
+
+
+namespace lspdlog
+{
+
+using Lspdlogger = Singleton<Logger>;
 
 #define @PROJECT_NAME_CAPS@_INFO(...) \
-  lspdlog::details::Logger::get().info(__VA_ARGS__);
+  lspdlog::Lspdlogger::get().info(__VA_ARGS__);
 
 #define @PROJECT_NAME_CAPS@_WARN(...) \
-  lspdlog::details::Logger::get().warn(__VA_ARGS__);
+  lspdlog::Lspdlogger::get().warn(__VA_ARGS__);
 
 #define @PROJECT_NAME_CAPS@_ERROR(...) \
-  lspdlog::details::Logger::get().error(__VA_ARGS__);
+  lspdlog::Lspdlogger::get().error(__VA_ARGS__);
 
-#define @PROJECT_NAME_CAPS@_DEBUG(...) \
-  lspdlog::details::Logger::get().debug(__VA_ARGS__);
+#if ${__AM_I_COMPILED_IN_DEBUG__}
+  #define @PROJECT_NAME_CAPS@_DEBUG(...) \
+    lspdlog::Lspdlogger::get().debug(__VA_ARGS__);
+#else
+  #define @PROJECT_NAME_CAPS@_DEBUG(...)
+#endif
 
-#define @PROJECT_NAME_CAPS@_ENABLE_DEBUG_LOG() \
-  lspdlog::details::Logger::get().enable_debug(true);
+#if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
+  #define @PROJECT_NAME_CAPS@_TRACE(...) \
+    {char this_file[] = __FILE__;\
+    lspdlog::Lspdlogger::get().trace("[", basename(this_file), " L", __LINE__, \
+              " : ", __FUNCTION__, "] ", __VA_ARGS__);}
+#else
+  #define @PROJECT_NAME_CAPS@_TRACE(...)
+#endif
 
-#define @PROJECT_NAME_CAPS@_DISABLE_DEBUG_LOG() \
-  lspdlog::details::Logger::get().enable_debug(false);
+#ifdef _ENABLE_ASYNC_LOG_
+  #define @PROJECT_NAME_CAPS@_ASYNC_QUEUE_LOG(x) \
+    lspdlog::Lspdlogger::get().set_async_queue(x);
+#else
+  #define @PROJECT_NAME_CAPS@_ASYNC_QUEUE_LOG(x)
+#endif
 
-namespace
+} // namespace lspdlog
+
+
+namespace 
 {
-  namespace spdlogd   = spdlog::details;
-  namespace spdlogdos = spdlogd::os;
-}
+
+namespace spdlogd   = spdlog::details;
+namespace spdlogdos = spdlogd::os;
 
 /**
  * @brief getUserHome.
@@ -285,24 +320,20 @@ inline bool deleteFile(const std::string& file)
   return (bool)spdlogdos::remove(file);
 }
 
-class DataLogger : public Singleton<DataLogger>
+class DataLogger
 {
-  friend class Singleton<DataLogger>;
-
-protected:
+public:
 
   DataLogger();
   ~DataLogger();
-
-public:
 
   DataLogger(DataLogger&)     = delete;
   void operator=(DataLogger&) = delete;
 
   template<typename... Args>
-  void log(const Args&... args);
+  void log(Args&&... args);
 
-  void enableLog(const bool enabled);
+  void enable_log(const bool enabled);
 
 protected:
 
@@ -327,16 +358,13 @@ protected:
   std::shared_ptr<spdlog::logger> logger_;
 
   bool init();
-
-  std::string repeatString(const std::string &str, std::size_t n);
 };
 
 DataLogger::DataLogger() :
   log_name_("@PROJECT_NAME@_main_logger"),
   log_dir_(".@PROJECT_NAME@")
 {
-
-  enableLog(${_ENABLE_DATA_LOGGING_});
+  enable_log(${_LSPDLOG_ENABLE_DATA_LOGGING_});
 
   log_sess_dir_ = getDateStr();
   log_time_ = getTimeStr();
@@ -365,7 +393,6 @@ inline bool DataLogger::init()
       {
         @PROJECT_NAME_CAPS@_ERROR("Could not find nor create directory ", log_dir_,
                                   ". Data will not be logged !");
-
         log_ = false;
         return false;
       }
@@ -409,51 +436,34 @@ inline bool DataLogger::init()
 }
 
 template<typename... Args>
-inline void DataLogger::log(const Args&... args)
+inline void DataLogger::log(Args&&... args)
 {
   if (!log_) return;
   if (!init_) init();
-  logger_->info(repeatString("{}", sizeof...(args)).c_str(), args...);
+  logger_->info(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
 }
 
-inline void DataLogger::enableLog(const bool enabled)
+inline void DataLogger::enable_log(const bool enabled)
 {
   log_ = enabled;
 }
 
-inline std::string DataLogger::repeatString(const std::string &str, std::size_t n)
+} /* namespace */
+
+namespace lspdlog
 {
-  if (n == 0) return {};
 
-  if (n == 1 || str.empty()) return str;
-
-  const auto n_char = str.size();
-
-  if (n_char == 1) return std::string(n, str[0]);
-
-  std::string res(str);
-  res.reserve(n_char * n);
-
-  std::size_t m = 2;
-  for (; m <= n; m *= 2) res += res;
-
-  n -= m*.5;
-
-  res.append(res.c_str(), n * n_char);
-
-  return res;
-}
+using LspdloggerData = Singleton<DataLogger>;
 
 #define @PROJECT_NAME_CAPS@_LOG(...) \
-  lspdlog::details::DataLogger::get().log(__VA_ARGS__);
+  lspdlog::LspdloggerData::get().log(__VA_ARGS__);
 
-#define @PROJECT_NAME_CAPS@_ENABLE_DATA_LOG(...) \
-  lspdlog::details::DataLogger::get().enableLog(true);
+#define @PROJECT_NAME_CAPS@_ENABLE_LOG() \
+  lspdlog::LspdloggerData::get().enable_log(true);
 
-#define @PROJECT_NAME_CAPS@_DISABLE_DATA_LOG(...) \
-  lspdlog::details::DataLogger::get().enableLog(false);
+#define @PROJECT_NAME_CAPS@_DISABLE_LOG() \
+  lspdlog::LspdloggerData::get().enable_log(false);
 
-} // namespace details
 } // namespace lspdlog
 
-#endif  /* INTERNAL_CONFIG_LOGGING_H_ */
+#endif  /* _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_ */
