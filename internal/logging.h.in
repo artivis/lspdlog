@@ -98,11 +98,13 @@ public:
   template<typename... Args>
   void trace(Args&&... args);
 
+  /*constexpr*/ bool async_enabled() const noexcept;
+
+  /*constexpr*/ bool debug_enabled() const noexcept;
+
+  /*constexpr*/ bool trace_enabled() const noexcept;
+
   bool set_async_queue(const std::size_t q_size);
-
-  bool debug_enabled();
-
-  bool trace_enabled();
 
 protected:
 
@@ -117,7 +119,7 @@ Logger::Logger()
   console_->set_level(spdlog::level::trace);
 #endif
 
-#ifdef _ENABLE_ASYNC_LOG_
+#if ${_LSPDLOG_ENABLE_ASYNC_LOGGING_}
   // Enable asynchronous logging
   // Queue size must be a power of 2
   spdlog::set_async_mode(4096);
@@ -163,22 +165,33 @@ void Logger::trace(Args&&... args)
   console_->trace(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
 }
 
-inline bool Logger::debug_enabled()
+inline /*constexpr*/ bool Logger::debug_enabled() const noexcept
 {
   return ${__AM_I_COMPILED_IN_DEBUG__};
 }
 
-inline bool Logger::trace_enabled()
+inline /*constexpr*/ bool Logger::trace_enabled() const noexcept
 {
   return ${_LSPDLOG_ENABLE_TRACE_LOGGING_};
 }
 
+inline /*constexpr*/ bool Logger::async_enabled() const noexcept
+{
+  return ${_LSPDLOG_ENABLE_ASYNC_LOGGING_};
+}
+
 inline bool Logger::set_async_queue(const std::size_t q_size)
 {
+#if ${_LSPDLOG_ENABLE_ASYNC_LOGGING_}
   bool p2 = q_size%2 == 0;
   if (p2) spdlog::set_async_mode(q_size);
-  return q_size;
+  else error("Can not set async queue to ", q_size, " as it's not a modulo of 2!");
+  return p2;
+#else
+  return false;
+#endif
 }
+
 
 } /* namespace */
 
@@ -213,13 +226,6 @@ using Lspdlogger = Singleton<Logger>;
               " : ", __FUNCTION__, "] ", __VA_ARGS__);}
 #else
   #define @PROJECT_NAME_CAPS@_TRACE(...)
-#endif
-
-#ifdef _ENABLE_ASYNC_LOG_
-  #define @PROJECT_NAME_CAPS@_ASYNC_QUEUE_LOG(x) \
-    lspdlog::details::Lspdlogger::get().set_async_queue(x);
-#else
-  #define @PROJECT_NAME_CAPS@_ASYNC_QUEUE_LOG(x)
 #endif
 
 } // namespace lspdlog
@@ -337,6 +343,13 @@ public:
 
   void enable_log(const bool enabled);
 
+  bool set_async_queue(const std::size_t q_size);
+
+  inline /*constexpr*/ bool async_enabled() const noexcept
+  {
+    return ${_LSPDLOG_ENABLE_ASYNC_LOGGING_};
+  }
+
 protected:
 
   bool init_ = false;
@@ -450,6 +463,20 @@ inline void DataLogger::enable_log(const bool enabled)
   log_ = enabled;
 }
 
+inline bool DataLogger::set_async_queue(const std::size_t q_size)
+{
+#if ${_LSPDLOG_ENABLE_ASYNC_LOGGING_}
+  bool p2 = q_size%2 == 0;
+  if (p2) spdlog::set_async_mode(q_size);
+  // Error is already thrown in Logger.
+  //else error("Can not set async queue to ", q_size, " as it's not a modulo of 2!");
+  return p2;
+#else
+  return false;
+#endif
+}
+
+
 } /* namespace */
 
 namespace lspdlog
@@ -487,6 +514,14 @@ struct ScopedLogEnabler
 
 #define @PROJECT_NAME_CAPS@_SCOPED_ENABLE_LOG() \
   const std::unique_ptr<lspdlog::details::ScopedLogEnabler> scoped_log_enabler(new lspdlog::details::ScopedLogEnabler);
+
+#if ${_LSPDLOG_ENABLE_ASYNC_LOGGING_}
+  #define @PROJECT_NAME_CAPS@_SET_ASYNC_QUEUE_LOG(x) \
+    lspdlog::details::Lspdlogger::get().set_async_queue(x); \
+    lspdlog::details::LspdloggerData::get().set_async_queue(x);
+#else
+  #define @PROJECT_NAME_CAPS@_SET_ASYNC_QUEUE_LOG(x)
+#endif
 
 } /* namespace lspdlog */
 

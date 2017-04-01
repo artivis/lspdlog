@@ -24,6 +24,12 @@ else()
   set(_LSPDLOG_ENABLE_DATA_LOGGING_ false)
 endif(LSPDLOG_ENABLE_DATA_LOGGING)
 
+if(LSPDLOG_ENABLE_ASYNC_LOGGING)
+  set(_LSPDLOG_ENABLE_ASYNC_LOGGING_ true)
+else()
+  set(_LSPDLOG_ENABLE_ASYNC_LOGGING_ false)
+endif(LSPDLOG_ENABLE_ASYNC_LOGGING)
+
 # Download spdlog
 add_subdirectory(internal)
 
