@@ -124,8 +124,13 @@ Logger::Logger()
   // Queue size must be a power of 2
   spdlog::set_async_mode(4096);
 
+  // Logging pattern is :
+  // [hour:minutes:seconds.nanoseconds][thread-id] #log-content
   spdlog::set_pattern("[%t][%H:%M:%S.%F][%l] %v");
 #else
+
+  // Logging pattern is :
+  // [logging-type] #log-content
   spdlog::set_pattern("[%l] %v");
 #endif
 }
@@ -185,16 +190,14 @@ inline bool Logger::set_async_queue(const std::size_t q_size)
 #if ${_LSPDLOG_ENABLE_ASYNC_LOGGING_}
   bool p2 = q_size%2 == 0;
   if (p2) spdlog::set_async_mode(q_size);
-  else error("Can not set async queue to ", q_size, " as it's not a modulo of 2!");
+  else error("Can not set async queue to ", q_size, " as it's not a power of 2!");
   return p2;
 #else
   return false;
 #endif
 }
 
-
 } /* namespace */
-
 
 namespace lspdlog
 {
@@ -229,7 +232,6 @@ using Lspdlogger = Singleton<Logger>;
 #endif
 
 } // namespace lspdlog
-
 
 namespace 
 {
@@ -438,10 +440,6 @@ inline bool DataLogger::init()
 
   logger_ = spdlog::basic_logger_mt(log_name_, log_full_);
 
-  // Enable asynchronous logging
-  // Queue size must be a power of 2
-  //spdlog::set_async_mode(4096);
-
   // Logging pattern is :
   // [hour:minutes:seconds.nanoseconds] #log-content
   logger_->set_pattern("[%H:%M:%S.%F] %v");
@@ -466,25 +464,28 @@ inline void DataLogger::enable_log(const bool enabled)
 inline bool DataLogger::set_async_queue(const std::size_t q_size)
 {
 #if ${_LSPDLOG_ENABLE_ASYNC_LOGGING_}
+  // Enable asynchronous logging
+  // Queue size must be a power of 2
+
   bool p2 = q_size%2 == 0;
   if (p2) spdlog::set_async_mode(q_size);
   // Error is already thrown in Logger.
-  //else error("Can not set async queue to ", q_size, " as it's not a modulo of 2!");
+  //else error("Can not set async queue to ", q_size, " as it's not a power of 2!");
   return p2;
 #else
   return false;
 #endif
 }
 
-
 } /* namespace */
 
 namespace lspdlog
 {
-
 namespace details
 {
+
 using LspdloggerData = Singleton<DataLogger>;
+
 } /* namespace details */
 
 #define @PROJECT_NAME_CAPS@_LOG(...) \
@@ -518,7 +519,7 @@ struct ScopedLogEnabler
 #if ${_LSPDLOG_ENABLE_ASYNC_LOGGING_}
   #define @PROJECT_NAME_CAPS@_SET_ASYNC_QUEUE_LOG(x) \
     lspdlog::details::Lspdlogger::get().set_async_queue(x); \
-    lspdlog::details::LspdloggerData::get().set_async_queue(x);
+    //lspdlog::details::LspdloggerData::get().set_async_queue(x);
 #else
   #define @PROJECT_NAME_CAPS@_SET_ASYNC_QUEUE_LOG(x)
 #endif
