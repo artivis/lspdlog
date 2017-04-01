@@ -185,21 +185,23 @@ inline bool Logger::set_async_queue(const std::size_t q_size)
 
 namespace lspdlog
 {
-
+namespace details
+{
 using Lspdlogger = Singleton<Logger>;
+} /* namespace details */
 
 #define @PROJECT_NAME_CAPS@_INFO(...) \
-  lspdlog::Lspdlogger::get().info(__VA_ARGS__);
+  lspdlog::details::Lspdlogger::get().info(__VA_ARGS__);
 
 #define @PROJECT_NAME_CAPS@_WARN(...) \
-  lspdlog::Lspdlogger::get().warn(__VA_ARGS__);
+  lspdlog::details::Lspdlogger::get().warn(__VA_ARGS__);
 
 #define @PROJECT_NAME_CAPS@_ERROR(...) \
-  lspdlog::Lspdlogger::get().error(__VA_ARGS__);
+  lspdlog::details::Lspdlogger::get().error(__VA_ARGS__);
 
 #if ${__AM_I_COMPILED_IN_DEBUG__}
   #define @PROJECT_NAME_CAPS@_DEBUG(...) \
-    lspdlog::Lspdlogger::get().debug(__VA_ARGS__);
+    lspdlog::details::Lspdlogger::get().debug(__VA_ARGS__);
 #else
   #define @PROJECT_NAME_CAPS@_DEBUG(...)
 #endif
@@ -207,7 +209,7 @@ using Lspdlogger = Singleton<Logger>;
 #if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
   #define @PROJECT_NAME_CAPS@_TRACE(...) \
     {char this_file[] = __FILE__;\
-    lspdlog::Lspdlogger::get().trace("[", basename(this_file), " L", __LINE__, \
+    lspdlog::details::Lspdlogger::get().trace("[", basename(this_file), " L", __LINE__, \
               " : ", __FUNCTION__, "] ", __VA_ARGS__);}
 #else
   #define @PROJECT_NAME_CAPS@_TRACE(...)
@@ -215,7 +217,7 @@ using Lspdlogger = Singleton<Logger>;
 
 #ifdef _ENABLE_ASYNC_LOG_
   #define @PROJECT_NAME_CAPS@_ASYNC_QUEUE_LOG(x) \
-    lspdlog::Lspdlogger::get().set_async_queue(x);
+    lspdlog::details::Lspdlogger::get().set_async_queue(x);
 #else
   #define @PROJECT_NAME_CAPS@_ASYNC_QUEUE_LOG(x)
 #endif
@@ -453,17 +455,20 @@ inline void DataLogger::enable_log(const bool enabled)
 namespace lspdlog
 {
 
+namespace details
+{
 using LspdloggerData = Singleton<DataLogger>;
+} /* namespace details */
 
 #define @PROJECT_NAME_CAPS@_LOG(...) \
-  lspdlog::LspdloggerData::get().log(__VA_ARGS__);
+  lspdlog::details::LspdloggerData::get().log(__VA_ARGS__);
 
 #define @PROJECT_NAME_CAPS@_ENABLE_LOG() \
-  lspdlog::LspdloggerData::get().enable_log(true);
+  lspdlog::details::LspdloggerData::get().enable_log(true);
 
 #define @PROJECT_NAME_CAPS@_DISABLE_LOG() \
-  lspdlog::LspdloggerData::get().enable_log(false);
+  lspdlog::details::LspdloggerData::get().enable_log(false);
 
-} // namespace lspdlog
+} /* namespace lspdlog */
 
 #endif  /* _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_ */
