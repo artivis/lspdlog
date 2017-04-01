@@ -469,6 +469,25 @@ using LspdloggerData = Singleton<DataLogger>;
 #define @PROJECT_NAME_CAPS@_DISABLE_LOG() \
   lspdlog::details::LspdloggerData::get().enable_log(false);
 
+namespace details
+{
+struct ScopedLogEnabler
+{
+  ScopedLogEnabler()
+  {
+    @PROJECT_NAME_CAPS@_ENABLE_LOG();
+  }
+
+  ~ScopedLogEnabler()
+  {
+    @PROJECT_NAME_CAPS@_DISABLE_LOG();
+  }
+};
+} /* namespace details */
+
+#define @PROJECT_NAME_CAPS@_SCOPED_ENABLE_LOG() \
+  const std::unique_ptr<lspdlog::details::ScopedLogEnabler> scoped_log_enabler(new lspdlog::details::ScopedLogEnabler);
+
 } /* namespace lspdlog */
 
 #endif  /* _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_ */

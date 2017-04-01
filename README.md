@@ -88,6 +88,7 @@ YOUR_PROJECT_NAME_ERROR(...);
 ```cpp
 YOUR_PROJECT_NAME_TRACE(...);
 YOUR_PROJECT_NAME_LOG(...);
+YOUR_PROJECT_NAME_SCOPED_LOG(...);
 ```
 
 ### An example:
@@ -99,7 +100,7 @@ project(my_awesome_project)
 
 # Set 'ON' to enable 'TRACE' macro.
 option(LSPDLOG_ENABLE_TRACE_LOGGING "Enable trace logging." OFF)
-  
+
 # Set 'ON' to enable 'LOG' macro.
 option(LSPDLOG_ENABLE_DATA_LOGGING  "Enable data logging."  OFF)
 
@@ -189,15 +190,23 @@ MY_AWESOME_PROJECT_LOG("will get logged.");
 
 MY_AWESOME_PROJECT_DISABLE_DATA_LOG();
 MY_AWESOME_PROJECT_LOG("will NOT get logged.");
+
+{
+  TEST_LSPDLOG_SCOPED_ENABLE_LOG();
+  TEST_LSPDLOG_LOG("will get logged.");
+}
+
+TEST_LSPDLOG_LOG("will NOT get logged.");
 ```
 
-Notice that the `~/.my_awesome_project` directory and sub-directories are created (if they don't already exists) only if the logging is enabled, either through `CMake` or manually.
+Notice that the `~/.my_awesome_project` directory and sub-directories are created (if they don't already exists) if the logging is enabled, either through `CMake` or manually.
 
 
 # Todo
 
 -   [ ] fix (do) install rules & `ExternalProject_Add`
 -   [x] trace macro
+-   [x] scoped log macro
 -   [ ] critical macro
 -   [ ] async logger
 -   [ ] enable more customization
