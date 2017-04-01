@@ -24,14 +24,14 @@ I have only over-engineered a tiny `cmake/cpp` layer on top of it.
 
     ```terminal
     $ cd ~/your_project/root_directory/
-    $ git clone https://github.com/artivis/lspdlog.git
+    ~/your_project/root_directory$ git clone https://github.com/artivis/lspdlog.git
     ```
 
     or else
 
     ```terminal
     $ cd ~/your_project/root_directory/
-    $ git submodule add https://github.com/artivis/lspdlog.git
+    ~/your_project/root_directory$ git submodule add https://github.com/artivis/lspdlog.git
     ```
 
 2.  In your project `CMakeLists.txt`:
@@ -192,11 +192,11 @@ MY_AWESOME_PROJECT_DISABLE_DATA_LOG();
 MY_AWESOME_PROJECT_LOG("will NOT get logged.");
 
 {
-  TEST_LSPDLOG_SCOPED_ENABLE_LOG();
-  TEST_LSPDLOG_LOG("will get logged.");
+  MY_AWESOME_PROJECT_SCOPED_ENABLE_LOG();
+  MY_AWESOME_PROJECT_LOG("will get logged.");
 }
 
-TEST_LSPDLOG_LOG("will NOT get logged.");
+MY_AWESOME_PROJECT_LOG("will NOT get logged.");
 ```
 
 Notice that the `~/.my_awesome_project` directory and sub-directories are created (if they don't already exists) if the logging is enabled, either through `CMake` or manually.
