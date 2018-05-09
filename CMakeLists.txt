@@ -31,6 +31,7 @@ else()
 endif(LSPDLOG_ENABLE_ASYNC_LOGGING)
 
 include (CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_FLAGS "-std=c++11")
 CHECK_CXX_SOURCE_COMPILES(
 "
   #include <tuple>
