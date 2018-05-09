@@ -8,6 +8,8 @@
 #ifndef _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_
 #define _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_
 
+#cmakedefine _LSPDLOG_COMPILER_SUPPORTS_CONSTEXPR_FUNC_
+
 #include "spdlog/spdlog.h"
 
 // for getpwuid
@@ -64,13 +66,17 @@ protected:
   ~Singleton() = default;
 };
 
-constexpr auto repeated_brace = std::make_tuple("{}", 
-                                                "{}{}", 
-                                                "{}{}{}", 
-                                                "{}{}{}{}", 
+#ifdef _LSPDLOG_COMPILER_SUPPORTS_CONSTEXPR_FUNC_
+constexpr auto repeated_brace = std::make_tuple("{}",
+#else
+    const auto repeated_brace = std::make_tuple("{}",
+#endif
+                                                "{}{}",
+                                                "{}{}{}",
+                                                "{}{}{}{}",
                                                 "{}{}{}{}{}",
-                                                "{}{}{}{}{}{}", 
-                                                "{}{}{}{}{}{}{}", 
+                                                "{}{}{}{}{}{}",
+                                                "{}{}{}{}{}{}{}",
                                                 "{}{}{}{}{}{}{}{}",
                                                 "{}{}{}{}{}{}{}{}{}",
                                                 "{}{}{}{}{}{}{}{}{}{}",

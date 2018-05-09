@@ -30,6 +30,15 @@ else()
   set(_LSPDLOG_ENABLE_ASYNC_LOGGING_ false)
 endif(LSPDLOG_ENABLE_ASYNC_LOGGING)
 
+include (CheckCXXSourceCompiles)
+CHECK_CXX_SOURCE_COMPILES(
+"
+  #include <tuple>
+  constexpr auto repeated_brace = std::make_tuple(\"{}\",\"{}{}\");
+  int main(void) { return 0; }
+"
+_LSPDLOG_COMPILER_SUPPORTS_CONSTEXPR_FUNC_)
+
 # Download spdlog
 add_subdirectory(internal)
 
