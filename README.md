@@ -16,7 +16,7 @@ I have only over-engineered a tiny `cmake/cpp` layer on top of it.
 ## Requirements
 
 -   c++11 compliant compiler.
--   internet connexion (spdlog is downloaded from [github](https://github.com/gabime/spdlog)).
+-   internet connection (spdlog is downloaded from [github](https://github.com/gabime/spdlog)).
 
 ## Install
 
