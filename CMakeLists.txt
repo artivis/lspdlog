@@ -67,6 +67,7 @@ endif()
 
 # configure logging.h
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/internal/logging.h.in "${CONFIG_DIR}/logging.h")
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/internal/wrapper.h.in "${CONFIG_DIR}/wrapper.h")
 
 set(LSPDLOG_INCLUDE_DIRS
     ${LSPDLOG_INCLUDE_DIRS}
