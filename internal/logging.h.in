@@ -136,7 +136,12 @@ protected:
 
 Logger::Logger()
 {
-  console_ = spdlog::stdout_color_mt("@PROJECT_NAME@_main_console");
+  try {
+    console_ = spdlog::stdout_color_mt("@PROJECT_NAME@_main_console");
+  } catch (const spdlog::spdlog_ex &ex) {
+    spdlog::get("@PROJECT_NAME@_main_console")->warn("@PROJECT_NAME@_main_console already exist");
+    // std::cout << "Console" << ex.what() << std::endl;
+  }
 
 #if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
   console_->set_level(spdlog::level::trace);
