@@ -231,14 +231,38 @@ using Lspdlogger = Singleton<Logger>;
 #define @PROJECT_NAME_CAPS@_INFO(...) \
   lspdlog::details::Lspdlogger::get().info(__VA_ARGS__);
 
+template<typename... Args>
+inline void INFO(Args&&... args)
+{
+  @PROJECT_NAME_CAPS@_INFO(std::forward<Args>(args)...);
+}
+
 #define @PROJECT_NAME_CAPS@_WARN(...) \
   lspdlog::details::Lspdlogger::get().warn(__VA_ARGS__);
+
+template<typename... Args>
+inline void WARN(Args&&... args)
+{
+  @PROJECT_NAME_CAPS@_WARN(std::forward<Args>(args)...);
+}
 
 #define @PROJECT_NAME_CAPS@_ERROR(...) \
   lspdlog::details::Lspdlogger::get().error(__VA_ARGS__);
 
+template<typename... Args>
+inline void ERROR(Args&&... args)
+{
+  @PROJECT_NAME_CAPS@_ERROR(std::forward<Args>(args)...);
+}
+
 #define @PROJECT_NAME_CAPS@_CRITICAL(...) \
   lspdlog::details::Lspdlogger::get().critical(__VA_ARGS__);
+
+template<typename... Args>
+inline void CRITICAL(Args&&... args)
+{
+  @PROJECT_NAME_CAPS@_CRITICAL(std::forward<Args>(args)...);
+}
 
 #if ${_LSPDLOG_ENABLE_DEBUG_}
   #define @PROJECT_NAME_CAPS@_DEBUG(...) \
@@ -246,6 +270,12 @@ using Lspdlogger = Singleton<Logger>;
 #else
   #define @PROJECT_NAME_CAPS@_DEBUG(...)
 #endif
+
+template<typename... Args>
+inline void DEBUG(Args&&... args)
+{
+  @PROJECT_NAME_CAPS@_DEBUG(std::forward<Args>(args)...);
+}
 
 #if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
   #define @PROJECT_NAME_CAPS@_TRACE(...) \
@@ -256,6 +286,11 @@ using Lspdlogger = Singleton<Logger>;
   #define @PROJECT_NAME_CAPS@_TRACE(...)
 #endif
 
+template<typename... Args>
+inline void TRACE(Args&&... args)
+{
+  @PROJECT_NAME_CAPS@_TRACE(std::forward<Args>(args)...);
+}
 } // namespace lspdlog
 
 #endif  /* _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_ */
