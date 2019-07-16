@@ -154,7 +154,7 @@ Logger::Logger()
 
   // Logging pattern is :
   // [logging-type] #log-content
-  spdlog::set_pattern("[%Y-%m-%d %T.%F] [%=10l] [@PROJECT_NAME@] %v");
+  spdlog::set_pattern("[%Y-%m-%d %T.%F] [%=10l] %v");
 // #endif
 }
 
@@ -166,37 +166,43 @@ Logger::~Logger()
 template<typename... Args>
 void Logger::info(Args&&... args)
 {
-  console_->info(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
+  console_->info(std::get<sizeof...(args)-1>(repeated_brace), "[@PROJECT_NAME@] ",
+                 std::forward<Args>(args)...);
 }
 
 template<typename... Args>
 void Logger::warn(Args&&... args)
 {
-  console_->warn(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
+  console_->warn(std::get<sizeof...(args)-1>(repeated_brace), "[@PROJECT_NAME@] ",
+                 std::forward<Args>(args)...);
 }
 
 template<typename... Args>
 void Logger::error(Args&&... args)
 {
-  console_->error(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
+  console_->error(std::get<sizeof...(args)-1>(repeated_brace), "[@PROJECT_NAME@] ",
+                  std::forward<Args>(args)...);
 }
 
 template<typename... Args>
 void Logger::critical(Args&&... args)
 {
-  console_->critical(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
+  console_->critical(std::get<sizeof...(args)-1>(repeated_brace), "[@PROJECT_NAME@] ",
+                     std::forward<Args>(args)...);
 }
 
 template<typename... Args>
 void Logger::debug(Args&&... args)
 {
-  console_->debug(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
+  console_->debug(std::get<sizeof...(args)-1>(repeated_brace), "[@PROJECT_NAME@] ",
+                  std::forward<Args>(args)...);
 }
 
 template<typename... Args>
 void Logger::trace(Args&&... args)
 {
-  console_->trace(std::get<sizeof...(args)-1>(repeated_brace), std::forward<Args>(args)...);
+  console_->trace(std::get<sizeof...(args)-1>(repeated_brace), "[@PROJECT_NAME@] ",
+                  std::forward<Args>(args)...);
 }
 
 inline /*constexpr*/ bool Logger::debug_enabled() const noexcept
