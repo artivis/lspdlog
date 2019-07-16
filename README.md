@@ -63,7 +63,7 @@ MY_PROJECT_NAME_TRACE(...); // can be turned off as shown in example
 Given your project `CMakeLists.txt`:
 
 ```cmake
-project(my_awesome_project)
+project(my_project)
 
 # Set 'ON' to enable 'TRACE' macro.
 option(LSPDLOG_ENABLE_TRACE_LOGGING "Enable trace logging." OFF)
