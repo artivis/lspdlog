@@ -1,97 +1,64 @@
 # lspdlog - Lazy spdlog
+
 ============================================
 
-## A simple wrapper package to enable cool logging for your project.
-
-This package is nothing but a tiny hacky wrapper around [spdlog](https://github.com/gabime/spdlog) logging library.  
-It has no other aim than enabling a bunch of macros to ease logging for your project.
+A simple wrapper package to enable cool logging for your project. This package is nothing but a tiny hacky wrapper around [spdlog](https://github.com/gabime/spdlog) logging library. It has no other aim than enabling a bunch of macros to ease logging for your project. Currently only support C++.
 
 For a more customizable logging please refer directly to [spdlog wiki](https://github.com/gabime/spdlog/wiki/1.-QuickStart).
 
-##### Disclamer:
+## Disclamer
 
-All credits go to Gabi Melman and [spdlog](https://github.com/gabime/spdlog) contributors, for this super fast C++ logging library.  
-I have only over-engineered a tiny `cmake/cpp` layer on top of it.
+All credits go to Gabi Melman and [spdlog](https://github.com/gabime/spdlog) contributors, for this super fast C++ logging library. Forked from [lspdlog](https://github.com/artivis/lspdlog), because it was not maintained and still using the old lib, this project reuse the `over-engineered` from original lspdlog and make it shine again.
 
 ## Requirements
 
--   c++11 compliant compiler.
--   internet connection (spdlog is downloaded from [github](https://github.com/gabime/spdlog)).
+- c++11 compliant compiler
+- cmake definition
 
 ## Install
 
-1.  Simply clone or copy this package in your project directory:
+1. Simply clone this package as the submodule in your project directory:
 
-    ```terminal
-    $ cd ~/your_project/root_directory/
-    ~/your_project/root_directory$ git clone https://github.com/artivis/lspdlog.git
-    ```
+```bash
+$ cd /path/project/directory/
+$ git submodule add https://github.com/nodefluxio/lspdlog.git
+```
 
-    or else
-
-    ```terminal
-    $ cd ~/your_project/root_directory/
-    ~/your_project/root_directory$ git submodule add https://github.com/artivis/lspdlog.git
-    ```
-
-2.  In your project `CMakeLists.txt`:
-
-    ```cmake
-    find_package(Threads REQUIRED)
-
-    add_subdirectory(lspdlog)
-    include_directories(${LSPDLOG_INCLUDE_DIRS})
-
-    add_executable(my_project my_project.cpp)
-    add_dependencies(my_project spdlog)
-    target_link_libraries(my_project ${CMAKE_THREAD_LIBS_INIT})
-    ```
-
-3.  Compile your project.
-
-4.  Nop that's it.
-
-#### Enabling logging in file (Optional):
-
-In order to enable a specific macro that logs in a file (see below), add to your project `CMakeLists.txt`:
+2. In the project `CMakeLists.txt`:
 
 ```cmake
-# Set 'ON' to enable 'TRACE' macro.
+project(my_project)
 option(LSPDLOG_ENABLE_TRACE_LOGGING "Enable trace logging." ON)
-  
-# Set 'ON' to enable 'LOG' macro.
-option(LSPDLOG_ENABLE_DATA_LOGGING  "Enable data logging."  ON)
-  
 find_package(Threads REQUIRED)
-  
 add_subdirectory(lspdlog)
 include_directories(${LSPDLOG_INCLUDE_DIRS})
-  
 add_executable(my_project my_project.cpp)
-add_dependencies(my_project spdlog)
 target_link_libraries(my_project ${CMAKE_THREAD_LIBS_INIT})
 ```
 
-## Now what ?
+3. Build the project.
+
+4. Nop that's it.
+
+## Logging Levels
 
 This package defines automatically the following macros:
 
 ```cpp
-YOUR_PROJECT_NAME_INFO(...);
-YOUR_PROJECT_NAME_WARN(...);
-YOUR_PROJECT_NAME_DEBUG(...);
-YOUR_PROJECT_NAME_ERROR(...);
+MY_PROJECT_NAME_INFO(...);
+MY_PROJECT_NAME_WARN(...);
+MY_PROJECT_NAME_ERROR(...);
+MY_PROJECT_NAME_CRITICAL(...);
 ```
 
-#### Optionally:
+### Debug Mode
 
 ```cpp
-YOUR_PROJECT_NAME_TRACE(...);
-YOUR_PROJECT_NAME_LOG(...);
-YOUR_PROJECT_NAME_SCOPED_LOG(...);
+MY_PROJECT_NAME_DEBUG(...);
+MY_PROJECT_NAME_TRACE(...); // can be turned off as shown in example
 ```
 
-### An example:
+### Usage Example:
 
 Given your project `CMakeLists.txt`:
 
@@ -100,9 +67,6 @@ project(my_awesome_project)
 
 # Set 'ON' to enable 'TRACE' macro.
 option(LSPDLOG_ENABLE_TRACE_LOGGING "Enable trace logging." OFF)
-
-# Set 'ON' to enable 'LOG' macro.
-option(LSPDLOG_ENABLE_DATA_LOGGING  "Enable data logging."  OFF)
 
 find_package(Threads REQUIRED)                         #<-- necessary
 
@@ -128,10 +92,12 @@ int main()
 {
   std::cout << "Hello world." << std::endl;
 
-  MY_AWESOME_PROJECT_INFO("Yep ", "that is");
-  MY_AWESOME_PROJECT_WARN("way\t", 2);
-  MY_AWESOME_PROJECT_DEBUG("(I meant 'too'");
-  MY_AWESOME_PROJECT_ERROR("easy");
+  MY_PROJECT_INFO("Yep ", "that is");
+  MY_PROJECT_WARN("way\t", 2);
+  MY_PROJECT_DEBUG("(I meant 'too')");
+  MY_PROJECT_ERROR("easy");
+  MY_PROJECT_CRITICAL("peasy");
+  MY_PROJECT_TRACE("lemon squeezy");
 
   return 0;
 }
@@ -139,12 +105,14 @@ int main()
 
 the following gets printed in your terminal:
 
-```terminal
+```bash
 Hello world.
-[info] Yep that is
-[warning] way   2
-[debug] (I meant 'too')
-[error] easy
+[2019-07-16 10:56:44.440903867] [   info   ] [my_project] Yep that is
+[2019-07-16 10:56:44.441016740] [ warning  ] [my_project] way   2
+[2019-07-16 10:56:44.441020164] [  debug   ] [my_project] (I meant 'too')
+[2019-07-16 10:56:44.441038220] [  error   ] [my_project] easy
+[2019-07-16 10:56:44.441040957] [ critical ] [my_project] peasy
+[2019-07-16 10:56:44.441053625] [  trace   ] [my_project] [main.cpp, ln.14 : main()] lemon squeezy
 ```
 
 Now if we re-compile in release:
@@ -153,60 +121,18 @@ Now if we re-compile in release:
 SET(CMAKE_BUILD_TYPE "RELEASE")
 ```
 
-```terminal
+```bash
 Hello world.
-[info] Yep that is
-[warning] way   2
-[error] easy
+[2019-07-16 10:56:44.440903867] [   info   ] [my_project] Yep that is
+[2019-07-16 10:56:44.441016740] [ warning  ] [my_project] way   2
+[2019-07-16 10:56:44.441038220] [  error   ] [my_project] easy
+[2019-07-16 10:56:44.441040957] [ critical ] [my_project] peasy
 ```
-
-#### Data logging (optional):
-
-Given that you have set `ON` the data logging option (see section `Install (optional)`), the following macro is enabled:
-
-```cpp
-MY_AWESOME_PROJECT_LOG("Some data ", 2, " save.");
-```
-
-This functionality creates a `.my_awesome_project` folder in the user `HOME` directory such as:
-
-```terminal
-~/.my_awesome_project$
-```
-
-where it will save all data passed to the `MY_AWESOME_PROJECT_LOG(...)` macro.  
-In order to keep things a little ordered, each time you run your program, the macro also creates a sub-directory named after the current date (MM_DD_YY - month-day-year) within which it saves the log file named after the current time (HH_MM_SS - hour-minutes-seconds):
-
-```terminal
-$ cat ~/.my_awesome_project/11_04_16/11_25_47.log
-[11:25:47.351422712] Some data 2 log.
-```
-
-This functionality can be enabled/disabled at runtime with the following macro:
-
-```cpp
-MY_AWESOME_PROJECT_ENABLE_DATA_LOG();
-MY_AWESOME_PROJECT_LOG("will get logged.");
-
-MY_AWESOME_PROJECT_DISABLE_DATA_LOG();
-MY_AWESOME_PROJECT_LOG("will NOT get logged.");
-
-{
-  MY_AWESOME_PROJECT_SCOPED_ENABLE_LOG();
-  MY_AWESOME_PROJECT_LOG("will get logged.");
-}
-
-MY_AWESOME_PROJECT_LOG("will NOT get logged.");
-```
-
-Notice that the `~/.my_awesome_project` directory and sub-directories are created (if they don't already exists) if the logging is enabled, either through `CMake` or manually.
-
 
 # Todo
 
--   [ ] fix (do) install rules & `ExternalProject_Add`
--   [x] trace macro
--   [x] scoped log macro
--   [ ] critical macro
--   [ ] async logger
--   [ ] enable more customization
+- [x] trace macro
+- [x] scoped log macro
+- [x] critical macro
+- [ ] fix formatter
+- [ ] enable more customization

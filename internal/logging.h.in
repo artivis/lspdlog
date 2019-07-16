@@ -154,7 +154,7 @@ Logger::Logger()
 
   // Logging pattern is :
   // [logging-type] #log-content
-  spdlog::set_pattern("[%Y-%m-%d %T.%F] [%=7l] [@PROJECT_NAME@] %v");
+  spdlog::set_pattern("[%Y-%m-%d %T.%F] [%=10l] [@PROJECT_NAME@] %v");
 // #endif
 }
 
@@ -257,8 +257,8 @@ using Lspdlogger = Singleton<Logger>;
 #if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
   #define @PROJECT_NAME_CAPS@_TRACE(...) \
     {char this_file[] = __FILE__;\
-    lspdlog::details::Lspdlogger::get().trace("[", basename(this_file), " L", __LINE__, \
-              " : ", __FUNCTION__, "] ", __VA_ARGS__);}
+    lspdlog::details::Lspdlogger::get().trace("[", basename(this_file), ", ln.", __LINE__, \
+              " : ", __FUNCTION__, "()] ", __VA_ARGS__);}
 #else
   #define @PROJECT_NAME_CAPS@_TRACE(...)
 #endif
