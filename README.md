@@ -27,8 +27,8 @@ $ git submodule add https://github.com/nodefluxio/lspdlog.git
 2. Unleash the logger in `CMakeLists.txt`:
 
 ```cmake
-project(my_project)          #<-- necessary to set console name
-option(LSPDLOG_ENABLE_TRACE_LOGGING "Enable trace logging." ON)
+project(my_project)           #<-- necessary to set console name
+option(LSPDLOG_ENABLE_TRACE_LOGGING "Enable trace logging." OFF)
 find_package(Threads REQUIRED)
 add_subdirectory(lspdlog)
 include_directories(${LSPDLOG_INCLUDE_DIRS})
@@ -53,12 +53,22 @@ MY_PROJECT_NAME_CRITICAL(...);
 
 ### Debug Mode
 
+To enable debugging, make sure the option in the cmake below is set `ON`
+
+```cmake
+option(LSPDLOG_ENABLE_TRACE_LOGGING "Enable trace logging." ON)
+```
+
+Afterwards, Debug and Trace log messages will be displayed on the console.
+
 ```cpp
 MY_PROJECT_NAME_DEBUG(...);
 MY_PROJECT_NAME_TRACE(...); // can be turned off as shown in example
 ```
 
-### Change Mode on Runtime
+#### Change Mode on Runtime
+
+This feature only available in Debug mode. The user can easily switch on / off `trace` and `debug` modes during runtime.
 
 ```cpp
 lspdlog::DEBUG_ON(); // enable debug level

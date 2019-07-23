@@ -14,6 +14,10 @@
 
 #include "wrapper.h"
 
+std::atomic<bool> on_debug_(false); 
+
+std::atomic<bool> on_trace_(false); 
+
 namespace
 {
 
@@ -115,6 +119,7 @@ public:
 protected:
 
   std::shared_ptr<spdlog::logger> console_;
+
 };
 
 Logger::Logger()
@@ -126,6 +131,8 @@ Logger::Logger()
   }
 
 #if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
+  on_debug_ = true;
+  on_trace_ = true;
   console_->set_level(spdlog::level::trace);
 #endif
 
@@ -168,51 +175,51 @@ void Logger::critical(Args&&... args)
 template<typename... Args>
 void Logger::debug(Args&&... args)
 {
-  console_->debug(std::get<sizeof...(args)>(repeated_brace), "[@PROJECT_NAME@] ",
+  if (on_debug_)
+    console_->debug(std::get<sizeof...(args)>(repeated_brace), "[@PROJECT_NAME@] ",
                   std::forward<Args>(args)...);
 }
 
 template<typename... Args>
 void Logger::trace(Args&&... args)
 {
-  console_->trace(std::get<sizeof...(args)>(repeated_brace), "[@PROJECT_NAME@] ",
+  if (on_trace_)
+    console_->trace(std::get<sizeof...(args)>(repeated_brace), "[@PROJECT_NAME@] ",
                   std::forward<Args>(args)...);
 }
 
 inline /*constexpr*/ void Logger::enable_debug() const noexcept
 {
-  #undef _LSPDLOG_ENABLE_DEBUG_
-  #define _LSPDLOG_ENABLE_DEBUG_ true
+  on_debug_ = true;
 }
 
 inline /*constexpr*/ void Logger::disable_debug() const noexcept
 {
-  #undef _LSPDLOG_ENABLE_DEBUG_
-  #define _LSPDLOG_ENABLE_DEBUG_ false
+  on_debug_ = false;
+  on_trace_ = false;
+  console_->warn("[{}] {}", "@PROJECT_NAME@", "debugging off");
 }
 
 inline /*constexpr*/ bool Logger::debug_enabled() const noexcept
 {
-  return ${_LSPDLOG_ENABLE_DEBUG_};
+  return on_debug_;
 }
 
 inline /*constexpr*/ void Logger::enable_trace() const noexcept
 {
-  console_->set_level(spdlog::level::trace);
-  #undef _LSPDLOG_ENABLE_TRACE_LOGGING_
-  #define _LSPDLOG_ENABLE_TRACE_LOGGING_ true
+  on_debug_ = true;
+  on_trace_ = true;
 }
 
 inline /*constexpr*/ void Logger::disable_trace() const noexcept
 {
-  console_->set_level(spdlog::level::debug);
-  #undef _LSPDLOG_ENABLE_TRACE_LOGGING_
-  #define _LSPDLOG_ENABLE_TRACE_LOGGING_ false
+  on_trace_ = false;
+  console_->warn("[{}] {}", "@PROJECT_NAME@", "tracing off");
 }
 
 inline /*constexpr*/ bool Logger::trace_enabled() const noexcept
 {
-  return ${_LSPDLOG_ENABLE_TRACE_LOGGING_};
+  return on_trace_;
 }
 
 } /* namespace */
@@ -288,6 +295,7 @@ inline void TRACE(Args&&... args)
   @PROJECT_NAME_CAPS@_TRACE(std::forward<Args>(args)...);
 }
 
+#if ${_LSPDLOG_ENABLE_DEBUG_}
 inline void DEBUG_ON() 
 {
   lspdlog::details::Lspdlogger::get().enable_debug();
@@ -298,6 +306,7 @@ inline void DEBUG_OFF()
   lspdlog::details::Lspdlogger::get().disable_debug();
 }
 
+#if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
 inline void TRACE_ON() 
 {
   lspdlog::details::Lspdlogger::get().enable_trace();
@@ -307,6 +316,8 @@ inline void TRACE_OFF()
 {
   lspdlog::details::Lspdlogger::get().disable_trace();
 }
+#endif
+#endif
 
 } // namespace lspdlog
 
