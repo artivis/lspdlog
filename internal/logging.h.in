@@ -3,6 +3,8 @@
  *
  * Created on: Oct 27, 2016
  * \author: Jeremie Deray
+ * \co-author: Alfin Syafalni
+ * Updated on: July 23, 2019
  */
 
 #ifndef _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_
@@ -35,10 +37,8 @@ public:
   }
 
   constexpr Singleton(const Singleton&)       = delete;
-  //constexpr Singleton(const Singleton&&)      = delete;
 
   constexpr Singleton& operator=(const Singleton&)  = delete;
-  //constexpr Singleton& operator=(const Singleton&&) = delete;
 
 protected:
 
@@ -104,13 +104,13 @@ public:
   template<typename... Args>
   void trace(Args&&... args);
 
-  /*constexpr*/ // bool async_enabled() const noexcept;
-
+  /*constexpr*/ void enable_debug() const noexcept;
+  /*constexpr*/ void disable_debug() const noexcept;
   /*constexpr*/ bool debug_enabled() const noexcept;
 
+  /*constexpr*/ void enable_trace() const noexcept;
+  /*constexpr*/ void disable_trace() const noexcept;
   /*constexpr*/ bool trace_enabled() const noexcept;
-
-  // bool set_async_queue(const std::size_t q_size);
 
 protected:
 
@@ -129,20 +129,7 @@ Logger::Logger()
   console_->set_level(spdlog::level::trace);
 #endif
 
-// #if ${_LSPDLOG_ENABLE_ASYNC_LOGGING_}
-//   // Enable asynchronous logging
-//   // Queue size must be a power of 2
-//   spdlog::set_async_mode(4096);
-// 
-//   // Logging pattern is :
-//   // [hour:minutes:seconds.nanoseconds][thread-id] #log-content
-//   spdlog::set_pattern("[%t][%H:%M:%S.%F][%l] %v");
-// #else
-
-  // Logging pattern is :
-  // [logging-type] #log-content
-  spdlog::set_pattern("[%Y-%m-%d %T.%F] [%=10l] %v");
-// #endif
+  spdlog::set_pattern("[%Y-%m-%d %T.%F] [%l] %v");
 }
 
 Logger::~Logger()
@@ -192,32 +179,41 @@ void Logger::trace(Args&&... args)
                   std::forward<Args>(args)...);
 }
 
+inline /*constexpr*/ void Logger::enable_debug() const noexcept
+{
+  #undef _LSPDLOG_ENABLE_DEBUG_
+  #define _LSPDLOG_ENABLE_DEBUG_ true
+}
+
+inline /*constexpr*/ void Logger::disable_debug() const noexcept
+{
+  #undef _LSPDLOG_ENABLE_DEBUG_
+  #define _LSPDLOG_ENABLE_DEBUG_ false
+}
+
 inline /*constexpr*/ bool Logger::debug_enabled() const noexcept
 {
   return ${_LSPDLOG_ENABLE_DEBUG_};
+}
+
+inline /*constexpr*/ void Logger::enable_trace() const noexcept
+{
+  console_->set_level(spdlog::level::trace);
+  #undef _LSPDLOG_ENABLE_TRACE_LOGGING_
+  #define _LSPDLOG_ENABLE_TRACE_LOGGING_ true
+}
+
+inline /*constexpr*/ void Logger::disable_trace() const noexcept
+{
+  console_->set_level(spdlog::level::debug);
+  #undef _LSPDLOG_ENABLE_TRACE_LOGGING_
+  #define _LSPDLOG_ENABLE_TRACE_LOGGING_ false
 }
 
 inline /*constexpr*/ bool Logger::trace_enabled() const noexcept
 {
   return ${_LSPDLOG_ENABLE_TRACE_LOGGING_};
 }
-
-// inline /*constexpr*/ bool Logger::async_enabled() const noexcept
-// {
-//   return ${_LSPDLOG_ENABLE_ASYNC_LOGGING_};
-// }
-
-// inline bool Logger::set_async_queue(const std::size_t q_size)
-// {
-// #if ${_LSPDLOG_ENABLE_ASYNC_LOGGING_}
-//   bool p2 = q_size%2 == 0;
-//   if (p2) spdlog::set_async_mode(q_size);
-//   else error("Can not set async queue to ", q_size, " as it's not a power of 2!");
-//   return p2;
-// #else
-//   return false;
-// #endif
-// }
 
 } /* namespace */
 
@@ -291,6 +287,27 @@ inline void TRACE(Args&&... args)
 {
   @PROJECT_NAME_CAPS@_TRACE(std::forward<Args>(args)...);
 }
+
+inline void DEBUG_ON() 
+{
+  lspdlog::details::Lspdlogger::get().enable_debug();
+}
+
+inline void DEBUG_OFF() 
+{
+  lspdlog::details::Lspdlogger::get().disable_debug();
+}
+
+inline void TRACE_ON() 
+{
+  lspdlog::details::Lspdlogger::get().enable_trace();
+}
+
+inline void TRACE_OFF() 
+{
+  lspdlog::details::Lspdlogger::get().disable_trace();
+}
+
 } // namespace lspdlog
 
 #endif  /* _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_ */

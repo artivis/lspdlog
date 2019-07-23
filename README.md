@@ -2,18 +2,18 @@
 
 ============================================
 
-A simple wrapper package to enable cool logging for your project. This package is nothing but a tiny hacky wrapper around [spdlog](https://github.com/gabime/spdlog) logging library. It has no other aim than enabling a bunch of macros to ease logging for your project. Currently only support C++.
+A simple wrapper package to enable cool logging for your project. This package is nothing but a tiny hackish wrapper around [`spdlog`](https://github.com/gabime/spdlog) logging library. It has no other aim than enabling a bunch of macros to ease logging for your project. Currently only support C++.
 
-For a more customizable logging please refer directly to [spdlog wiki](https://github.com/gabime/spdlog/wiki/1.-QuickStart).
+For a more customizable logging please refer directly to [`spdlog` wiki](https://github.com/gabime/spdlog/wiki/1.-QuickStart).
 
 ## Disclamer
 
-All credits go to Gabi Melman and [spdlog](https://github.com/gabime/spdlog) contributors, for this super fast C++ logging library. Forked from [lspdlog](https://github.com/artivis/lspdlog), because it was not maintained and still using the old lib, this project reuse the `over-engineered` from original lspdlog and make it shine again.
+All credits go to Gabi Melman and [`spdlog`](https://github.com/gabime/spdlog) contributors, for this super fast C++ logging library. Forked from [`lspdlog`](https://github.com/artivis/lspdlog), because it was not maintained and still using the old version of `spdlog`, hence this project reuse the aformentioned `over-engineered` original `lspdlog` and make it useful again.
 
 ## Requirements
 
-- c++11 compliant compiler
-- cmake definition
+- c++11 or above compiler
+- cmake
 
 ## Install
 
@@ -24,10 +24,10 @@ $ cd /path/project/directory/
 $ git submodule add https://github.com/nodefluxio/lspdlog.git
 ```
 
-2. In the project `CMakeLists.txt`:
+2. Unleash the logger in `CMakeLists.txt`:
 
 ```cmake
-project(my_project)
+project(my_project)          #<-- necessary to set console name
 option(LSPDLOG_ENABLE_TRACE_LOGGING "Enable trace logging." ON)
 find_package(Threads REQUIRED)
 add_subdirectory(lspdlog)
@@ -38,7 +38,7 @@ target_link_libraries(my_project ${CMAKE_THREAD_LIBS_INIT})
 
 3. Build the project.
 
-4. Nop that's it.
+4. Voila! that's all. 
 
 ## Logging Levels
 
@@ -58,7 +58,16 @@ MY_PROJECT_NAME_DEBUG(...);
 MY_PROJECT_NAME_TRACE(...); // can be turned off as shown in example
 ```
 
-### Usage Example:
+### Change Mode on Runtime
+
+```cpp
+lspdlog::DEBUG_ON(); // enable debug level
+lspdlog::DEBUG_OFF(); // disable debug level
+lspdlog::TRACE_ON(); // enable trace level
+lspdlog::TRACE_OFF(); // disable trace level
+```
+
+## Usage Example
 
 Given your project `CMakeLists.txt`:
 
@@ -107,12 +116,12 @@ the following gets printed in your terminal:
 
 ```bash
 Hello world.
-[2019-07-16 10:56:44.440903867] [   info   ] [my_project] Yep that is
-[2019-07-16 10:56:44.441016740] [ warning  ] [my_project] way   2
-[2019-07-16 10:56:44.441020164] [  debug   ] [my_project] (I meant 'too')
-[2019-07-16 10:56:44.441038220] [  error   ] [my_project] easy
-[2019-07-16 10:56:44.441040957] [ critical ] [my_project] peasy
-[2019-07-16 10:56:44.441053625] [  trace   ] [my_project] [main.cpp, ln.14 : main()] lemon squeezy
+[2019-07-16 10:56:44.440903867] [info] [my_project] Yep that is
+[2019-07-16 10:56:44.441016740] [warning] [my_project] way   2
+[2019-07-16 10:56:44.441020164] [debug] [my_project] (I meant 'too')
+[2019-07-16 10:56:44.441038220] [error] [my_project] easy
+[2019-07-16 10:56:44.441040957] [critical] [my_project] peasy
+[2019-07-16 10:56:44.441053625] [trace] [my_project] [main.cpp, ln.14 : main()] lemon squeezy
 ```
 
 Now if we re-compile in release:
@@ -123,16 +132,29 @@ SET(CMAKE_BUILD_TYPE "RELEASE")
 
 ```bash
 Hello world.
-[2019-07-16 10:56:44.440903867] [   info   ] [my_project] Yep that is
-[2019-07-16 10:56:44.441016740] [ warning  ] [my_project] way   2
-[2019-07-16 10:56:44.441038220] [  error   ] [my_project] easy
-[2019-07-16 10:56:44.441040957] [ critical ] [my_project] peasy
+[2019-07-16 10:56:44.440903867] [info] [my_project] Yep that is
+[2019-07-16 10:56:44.441016740] [warning] [my_project] way   2
+[2019-07-16 10:56:44.441038220] [error] [my_project] easy
+[2019-07-16 10:56:44.441040957] [critical] [my_project] peasy
 ```
 
-# Todo
+## Alternative Function
+
+If the macro definition is out-of-scope, these functions are available to use.
+
+```cpp
+lspdlog::INFO(...);
+lspdlog::WARN(...);
+lspdlog::ERROR(...);
+lspdlog::CRITICAL(...);
+lspdlog::DEBUG(...);
+lspdlog::TRACE(...);
+```
+
+## ToDo
 
 - [x] trace macro
-- [x] scoped log macro
 - [x] critical macro
+- [x] runtime mode changer
 - [ ] fix formatter
 - [ ] enable more customization
