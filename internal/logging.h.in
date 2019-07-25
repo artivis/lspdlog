@@ -91,11 +91,13 @@ class Logger {
   template <typename... Args>
   void critical(Args&&... args);
 
+#ifdef _RUNTIME_MODE_CONTROL_
   template <typename... Args>
   void debug(Args&&... args);
 
   template <typename... Args>
   void trace(Args&&... args);
+#endif
 
   /*constexpr*/ bool debug_enabled() const noexcept;
   /*constexpr*/ bool trace_enabled() const noexcept;
@@ -103,9 +105,10 @@ class Logger {
 #ifdef _RUNTIME_MODE_CONTROL_
   /*constexpr*/ void enable_debug() const noexcept;
   /*constexpr*/ void disable_debug() const noexcept;
-
+#if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
   /*constexpr*/ void enable_trace() const noexcept;
   /*constexpr*/ void disable_trace() const noexcept;
+#endif
 #endif
 
  protected:
@@ -154,6 +157,7 @@ void Logger::critical(Args&&... args) {
                      "[@PROJECT_NAME@] ", std::forward<Args>(args)...);
 }
 
+#ifdef _RUNTIME_MODE_CONTROL_
 template <typename... Args>
 void Logger::debug(Args&&... args) {
   if (on_debug_)
@@ -167,6 +171,7 @@ void Logger::trace(Args&&... args) {
     console_->trace(std::get<sizeof...(args)>(repeated_brace),
                     "[@PROJECT_NAME@] ", std::forward<Args>(args)...);
 }
+#endif
 
 inline /*constexpr*/ bool Logger::debug_enabled() const noexcept {
 #ifdef _RUNTIME_MODE_CONTROL_
@@ -178,8 +183,9 @@ inline /*constexpr*/ bool Logger::debug_enabled() const noexcept {
 inline /*constexpr*/ bool Logger::trace_enabled() const noexcept {
 #ifdef _RUNTIME_MODE_CONTROL_
   return on_trace_;
-#endif
+#else
   return false;
+#endif
 }
 
 #ifdef _RUNTIME_MODE_CONTROL_
@@ -193,6 +199,7 @@ inline /*constexpr*/ void Logger::disable_debug() const noexcept {
   console_->warn("[{}] {}", "@PROJECT_NAME@", "debugging off");
 }
 
+#if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
 inline /*constexpr*/ void Logger::enable_trace() const noexcept {
   on_debug_ = true;
   on_trace_ = true;
@@ -202,6 +209,7 @@ inline /*constexpr*/ void Logger::disable_trace() const noexcept {
   on_trace_ = false;
   console_->warn("[{}] {}", "@PROJECT_NAME@", "tracing off");
 }
+#endif
 #endif
 
 } /* namespace */
