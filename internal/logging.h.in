@@ -14,119 +14,108 @@
 
 #include "wrapper.h"
 
-std::atomic<bool> on_debug_(false); 
+namespace {
 
-std::atomic<bool> on_trace_(false); 
-
-namespace
-{
+#if ${_LSPDLOG_ENABLE_DEBUG_}
+#ifndef _RUNTIME_MODE_CONTROL_
+std::atomic<bool> on_debug_(false);
+std::atomic<bool> on_trace_(false);
+#define _RUNTIME_MODE_CONTROL_
+#endif
+#endif
 
 /**
  * \brief A (thread-safer ?) Singleton implementation
  * with constructor argument forwarding.
  **/
 template <class T>
-class Singleton
-{
-
+class Singleton {
   using SingletonOPtr = std::unique_ptr<T>;
 
-public:
-
+ public:
   template <typename... Args>
-  static T& get(Args&&... args)
-  {
+  static T& get(Args&&... args) {
     static SingletonOPtr instance_(new T(std::forward<Args>(args)...));
     return *instance_;
   }
 
-  constexpr Singleton(const Singleton&)       = delete;
+  constexpr Singleton(const Singleton&) = delete;
 
-  constexpr Singleton& operator=(const Singleton&)  = delete;
+  constexpr Singleton& operator=(const Singleton&) = delete;
 
-protected:
-
-  Singleton()  = default;
+ protected:
+  Singleton() = default;
   ~Singleton() = default;
 };
 
 #ifdef _LSPDLOG_COMPILER_SUPPORTS_CONSTEXPR_FUNC_
-constexpr auto repeated_brace = std::make_tuple("{}",
+constexpr auto repeated_brace = std::make_tuple(
+    "{}",
 #else
-    const auto repeated_brace = std::make_tuple("{}",
+const auto repeated_brace = std::make_tuple(
+    "{}",
 #endif
-                                                "{}{}",
-                                                "{}{}{}",
-                                                "{}{}{}{}",
-                                                "{}{}{}{}{}",
-                                                "{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-                                                "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}"); // up to 25 args. Should be fine
+    "{}{}", "{}{}{}", "{}{}{}{}", "{}{}{}{}{}", "{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}", "{}{}{}{}{}{}{}{}", "{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}", "{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}", "{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}{}{}", "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}", "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+    "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}");  // up to 25 args.
+                                                            // Should be fine
 
-class Logger
-{
-public:
-
+class Logger {
+ public:
   Logger();
   ~Logger();
 
-  Logger(Logger&)         = delete;
+  Logger(Logger&) = delete;
   void operator=(Logger&) = delete;
 
-  template<typename... Args>
+  template <typename... Args>
   void info(Args&&... args);
 
-  template<typename... Args>
+  template <typename... Args>
   void warn(Args&&... args);
 
-  template<typename... Args>
+  template <typename... Args>
   void error(Args&&... args);
 
-  template<typename... Args>
+  template <typename... Args>
   void critical(Args&&... args);
 
-  template<typename... Args>
+  template <typename... Args>
   void debug(Args&&... args);
 
-  template<typename... Args>
+  template <typename... Args>
   void trace(Args&&... args);
 
+  /*constexpr*/ bool debug_enabled() const noexcept;
+  /*constexpr*/ bool trace_enabled() const noexcept;
+
+#ifdef _RUNTIME_MODE_CONTROL_
   /*constexpr*/ void enable_debug() const noexcept;
   /*constexpr*/ void disable_debug() const noexcept;
-  /*constexpr*/ bool debug_enabled() const noexcept;
 
   /*constexpr*/ void enable_trace() const noexcept;
   /*constexpr*/ void disable_trace() const noexcept;
-  /*constexpr*/ bool trace_enabled() const noexcept;
+#endif
 
-protected:
-
+ protected:
   std::shared_ptr<spdlog::logger> console_;
-
 };
 
-Logger::Logger()
-{
+Logger::Logger() {
   try {
     console_ = spdlog::stdout_color_mt("@PROJECT_NAME@_main_console");
-  } catch (const spdlog::spdlog_ex &ex) {
+  } catch (const spdlog::spdlog_ex& ex) {
     console_ = spdlog::get("@PROJECT_NAME@_main_console");
   }
 
@@ -139,186 +128,154 @@ Logger::Logger()
   spdlog::set_pattern("[%Y-%m-%d %T.%F] [%l] %v");
 }
 
-Logger::~Logger()
-{
-  spdlog::drop("@PROJECT_NAME@_main_console");
-}
+Logger::~Logger() { spdlog::drop("@PROJECT_NAME@_main_console"); }
 
-template<typename... Args>
-void Logger::info(Args&&... args)
-{
+template <typename... Args>
+void Logger::info(Args&&... args) {
   console_->info(std::get<sizeof...(args)>(repeated_brace), "[@PROJECT_NAME@] ",
                  std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-void Logger::warn(Args&&... args)
-{
+template <typename... Args>
+void Logger::warn(Args&&... args) {
   console_->warn(std::get<sizeof...(args)>(repeated_brace), "[@PROJECT_NAME@] ",
                  std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-void Logger::error(Args&&... args)
-{
-  console_->error(std::get<sizeof...(args)>(repeated_brace), "[@PROJECT_NAME@] ",
-                  std::forward<Args>(args)...);
+template <typename... Args>
+void Logger::error(Args&&... args) {
+  console_->error(std::get<sizeof...(args)>(repeated_brace),
+                  "[@PROJECT_NAME@] ", std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-void Logger::critical(Args&&... args)
-{
-  console_->critical(std::get<sizeof...(args)>(repeated_brace), "[@PROJECT_NAME@] ",
-                     std::forward<Args>(args)...);
+template <typename... Args>
+void Logger::critical(Args&&... args) {
+  console_->critical(std::get<sizeof...(args)>(repeated_brace),
+                     "[@PROJECT_NAME@] ", std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-void Logger::debug(Args&&... args)
-{
+template <typename... Args>
+void Logger::debug(Args&&... args) {
   if (on_debug_)
-    console_->debug(std::get<sizeof...(args)>(repeated_brace), "[@PROJECT_NAME@] ",
-                  std::forward<Args>(args)...);
+    console_->debug(std::get<sizeof...(args)>(repeated_brace),
+                    "[@PROJECT_NAME@] ", std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-void Logger::trace(Args&&... args)
-{
+template <typename... Args>
+void Logger::trace(Args&&... args) {
   if (on_trace_)
-    console_->trace(std::get<sizeof...(args)>(repeated_brace), "[@PROJECT_NAME@] ",
-                  std::forward<Args>(args)...);
+    console_->trace(std::get<sizeof...(args)>(repeated_brace),
+                    "[@PROJECT_NAME@] ", std::forward<Args>(args)...);
 }
 
-inline /*constexpr*/ void Logger::enable_debug() const noexcept
-{
+inline /*constexpr*/ bool Logger::debug_enabled() const noexcept {
+#ifdef _RUNTIME_MODE_CONTROL_
+  return on_debug_;
+#endif
+  return false;
+}
+
+inline /*constexpr*/ bool Logger::trace_enabled() const noexcept {
+#ifdef _RUNTIME_MODE_CONTROL_
+  return on_trace_;
+#endif
+  return false;
+}
+
+#ifdef _RUNTIME_MODE_CONTROL_
+inline /*constexpr*/ void Logger::enable_debug() const noexcept {
   on_debug_ = true;
 }
 
-inline /*constexpr*/ void Logger::disable_debug() const noexcept
-{
+inline /*constexpr*/ void Logger::disable_debug() const noexcept {
   on_debug_ = false;
   on_trace_ = false;
   console_->warn("[{}] {}", "@PROJECT_NAME@", "debugging off");
 }
 
-inline /*constexpr*/ bool Logger::debug_enabled() const noexcept
-{
-  return on_debug_;
-}
-
-inline /*constexpr*/ void Logger::enable_trace() const noexcept
-{
+inline /*constexpr*/ void Logger::enable_trace() const noexcept {
   on_debug_ = true;
   on_trace_ = true;
 }
 
-inline /*constexpr*/ void Logger::disable_trace() const noexcept
-{
+inline /*constexpr*/ void Logger::disable_trace() const noexcept {
   on_trace_ = false;
   console_->warn("[{}] {}", "@PROJECT_NAME@", "tracing off");
 }
-
-inline /*constexpr*/ bool Logger::trace_enabled() const noexcept
-{
-  return on_trace_;
-}
+#endif
 
 } /* namespace */
 
-namespace lspdlog
-{
-namespace details
-{
+namespace lspdlog {
+namespace details {
 using Lspdlogger = Singleton<Logger>;
 } /* namespace details */
 
-#define @PROJECT_NAME_CAPS@_INFO(...) \
-  lspdlog::details::Lspdlogger::get().info(__VA_ARGS__);
+#define @PROJECT_NAME_CAPS@_INFO(...) lspdlog::details::Lspdlogger::get() \
+    .info(__VA_ARGS__);
 
-template<typename... Args>
-inline void INFO(Args&&... args)
-{
+template <typename... Args>
+inline void INFO(Args&&... args) {
   @PROJECT_NAME_CAPS@_INFO(std::forward<Args>(args)...);
 }
 
-#define @PROJECT_NAME_CAPS@_WARN(...) \
-  lspdlog::details::Lspdlogger::get().warn(__VA_ARGS__);
+#define @PROJECT_NAME_CAPS@_WARN(...) lspdlog::details::Lspdlogger::get() \
+    .warn(__VA_ARGS__);
 
-template<typename... Args>
-inline void WARN(Args&&... args)
-{
+template <typename... Args>
+inline void WARN(Args&&... args) {
   @PROJECT_NAME_CAPS@_WARN(std::forward<Args>(args)...);
 }
 
-#define @PROJECT_NAME_CAPS@_ERROR(...) \
-  lspdlog::details::Lspdlogger::get().error(__VA_ARGS__);
+#define @PROJECT_NAME_CAPS@_ERROR(...) lspdlog::details::Lspdlogger::get() \
+    .error(__VA_ARGS__);
 
-template<typename... Args>
-inline void ERROR(Args&&... args)
-{
+template <typename... Args>
+inline void ERROR(Args&&... args) {
   @PROJECT_NAME_CAPS@_ERROR(std::forward<Args>(args)...);
 }
 
-#define @PROJECT_NAME_CAPS@_CRITICAL(...) \
-  lspdlog::details::Lspdlogger::get().critical(__VA_ARGS__);
+#define @PROJECT_NAME_CAPS@_CRITICAL(...) lspdlog::details::Lspdlogger::get() \
+    .critical(__VA_ARGS__);
 
-template<typename... Args>
-inline void CRITICAL(Args&&... args)
-{
+template <typename... Args>
+inline void CRITICAL(Args&&... args) {
   @PROJECT_NAME_CAPS@_CRITICAL(std::forward<Args>(args)...);
 }
 
 #if ${_LSPDLOG_ENABLE_DEBUG_}
-  #define @PROJECT_NAME_CAPS@_DEBUG(...) \
-    lspdlog::details::Lspdlogger::get().debug(__VA_ARGS__);
+#define @PROJECT_NAME_CAPS@_DEBUG(...) lspdlog::details::Lspdlogger::get() \
+    .debug(__VA_ARGS__);
 #else
-  #define @PROJECT_NAME_CAPS@_DEBUG(...)
+#define @PROJECT_NAME_CAPS@_DEBUG(...)
 #endif
 
-template<typename... Args>
-inline void DEBUG(Args&&... args)
-{
+template <typename... Args>
+inline void DEBUG(Args&&... args) {
   @PROJECT_NAME_CAPS@_DEBUG(std::forward<Args>(args)...);
 }
 
 #if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
-  #define @PROJECT_NAME_CAPS@_TRACE(...) \
-    {char this_file[] = __FILE__;\
-    lspdlog::details::Lspdlogger::get().trace("[", basename(this_file), ", ln.", __LINE__, \
-              " : ", __FUNCTION__, "()] ", __VA_ARGS__);}
+#define @PROJECT_NAME_CAPS@_TRACE(...){                                    \
+    char this_file[] = __FILE__; lspdlog::details::Lspdlogger::get().trace( \
+        "[", basename(this_file), ", ln.", __LINE__, " : ", __FUNCTION__,   \
+        "()] ", __VA_ARGS__); }
 #else
-  #define @PROJECT_NAME_CAPS@_TRACE(...)
+#define @PROJECT_NAME_CAPS@_TRACE(...)
 #endif
 
-template<typename... Args>
-inline void TRACE(Args&&... args)
-{
+template <typename... Args>
+inline void TRACE(Args&&... args) {
   @PROJECT_NAME_CAPS@_TRACE(std::forward<Args>(args)...);
 }
 
-#if ${_LSPDLOG_ENABLE_DEBUG_}
-inline void DEBUG_ON() 
-{
-  lspdlog::details::Lspdlogger::get().enable_debug();
-}
-
-inline void DEBUG_OFF() 
-{
-  lspdlog::details::Lspdlogger::get().disable_debug();
-}
-
-#if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
-inline void TRACE_ON() 
-{
-  lspdlog::details::Lspdlogger::get().enable_trace();
-}
-
-inline void TRACE_OFF() 
-{
-  lspdlog::details::Lspdlogger::get().disable_trace();
-}
-#endif
+#ifdef _RUNTIME_MODE_CONTROL_
+inline void DEBUG_ON() { lspdlog::details::Lspdlogger::get().enable_debug(); }
+inline void DEBUG_OFF() { lspdlog::details::Lspdlogger::get().disable_debug(); }
+inline void TRACE_ON() { lspdlog::details::Lspdlogger::get().enable_trace(); }
+inline void TRACE_OFF() { lspdlog::details::Lspdlogger::get().disable_trace(); }
 #endif
 
-} // namespace lspdlog
+}  // namespace lspdlog
 
-#endif  /* _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_ */
+#endif /* _@PROJECT_NAME_CAPS@_INTERNAL_CONFIG_LOGGING_H_ */
