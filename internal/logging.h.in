@@ -280,8 +280,10 @@ inline void TRACE(Args&&... args) {
 #ifdef _RUNTIME_MODE_CONTROL_
 inline void DEBUG_ON() { lspdlog::details::Lspdlogger::get().enable_debug(); }
 inline void DEBUG_OFF() { lspdlog::details::Lspdlogger::get().disable_debug(); }
+#if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
 inline void TRACE_ON() { lspdlog::details::Lspdlogger::get().enable_trace(); }
 inline void TRACE_OFF() { lspdlog::details::Lspdlogger::get().disable_trace(); }
+#endif
 #endif
 
 }  // namespace lspdlog
