@@ -122,10 +122,13 @@ Logger::Logger() {
     console_ = spdlog::get("@PROJECT_NAME@_main_console");
   }
 
-#if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
+#if ${_LSPDLOG_ENABLE_DEBUG_}
   on_debug_ = true;
+  console_->set_level(spdlog::level::debug);
+#if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
   on_trace_ = true;
   console_->set_level(spdlog::level::trace);
+#endif
 #endif
 
   spdlog::set_pattern("[%Y-%m-%d %T.%F] [%l] %v");
@@ -265,7 +268,8 @@ inline void DEBUG(Args&&... args) {
 
 #if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
 #define @PROJECT_NAME_CAPS@_TRACE(...) lspdlog::details::Lspdlogger::get() \
-    .trace("[", __FILE__, ", ln.", __LINE__, " : ", __FUNCTION__, "()] ", __VA_ARGS__);
+    .trace("[", __FILE__, ", ln.", __LINE__ \
+    , " : ", __FUNCTION__, "()] ", __VA_ARGS__);
 #else
 #define @PROJECT_NAME_CAPS@_TRACE(...)
 #endif
