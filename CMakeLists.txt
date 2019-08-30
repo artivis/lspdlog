@@ -16,7 +16,7 @@ if(LSPDLOG_ENABLE_TRACE_LOGGING)
   set(_LSPDLOG_ENABLE_TRACE_LOGGING_ true)
 else()
   set(_LSPDLOG_ENABLE_TRACE_LOGGING_ false)
-endif(LSPDLOG_ENABLE_TRACE_LOGGING)
+endif()
 
 include (CheckCXXSourceCompiles)
 set(CMAKE_REQUIRED_FLAGS "-std=c++11")

@@ -264,18 +264,20 @@ inline void DEBUG(Args&&... args) {
 }
 
 #if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
-#define @PROJECT_NAME_CAPS@_TRACE(...){                                    \
-    char this_file[] = __FILE__; lspdlog::details::Lspdlogger::get().trace( \
-        "[", basename(this_file), ", ln.", __LINE__, " : ", __FUNCTION__,   \
-        "()] ", __VA_ARGS__); }
+#define @PROJECT_NAME_CAPS@_TRACE(...) lspdlog::details::Lspdlogger::get() \
+    .trace("[", __FILE__, ", ln.", __LINE__, " : ", __FUNCTION__, "()] ", __VA_ARGS__);
 #else
 #define @PROJECT_NAME_CAPS@_TRACE(...)
 #endif
 
+#if ${_LSPDLOG_ENABLE_TRACE_LOGGING_}
 template <typename... Args>
 inline void TRACE(Args&&... args) {
   @PROJECT_NAME_CAPS@_TRACE(std::forward<Args>(args)...);
 }
+#else
+#define @PROJECT_NAME_CAPS@_TRACE(...)
+#endif
 
 #ifdef _RUNTIME_MODE_CONTROL_
 inline void DEBUG_ON() { lspdlog::details::Lspdlogger::get().enable_debug(); }
