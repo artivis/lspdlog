@@ -38,7 +38,7 @@ target_link_libraries(my_project ${CMAKE_THREAD_LIBS_INIT})
 
 3. Build the project.
 
-4. Voila! that's all. 
+4. Voila! that's all.
 
 ## Logging Levels
 
@@ -95,7 +95,7 @@ find_package(Threads REQUIRED)                         #<-- necessary
 SET(CMAKE_BUILD_TYPE "DEBUG")
 
 add_subdirectory(lspdlog)                    #<-- necessary
-include_directories(${LSPDLOG_INCLUDE_DIRS}) #<-- necessary
+include_directories(${${PROJECT_NAME}_LSPDLOG_INCLUDE_DIRS}) #<-- necessary
 
 add_executable(my_project my_project.cpp)
 add_dependencies(my_project spdlog) #<-- necessary, waits for downloading spdlog
